@@ -1,0 +1,15 @@
+/* Custom Room Card Hover Effects */
+.room-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.room-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+.room-card .card-img-top {
+  height: 200px;
+  object-fit: cover;
+}
