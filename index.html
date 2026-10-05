@@ -15,13 +15,13 @@
 <body class="d-flex flex-column min-vh-100">
 
   <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+  <nav class="navbar navbar-expand-lg navbar-light site-navbar sticky-top">
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center" href="index.html">
+      <a class="navbar-brand site-brand" href="index.html" aria-label="RoomSewa-Sudur home">
         <span class="brand-mark" aria-hidden="true"><i class="bi bi-house-heart-fill"></i></span>
-        <span class="fw-bold text-primary fs-4">RoomSewa<span class="text-dark">-Sudur</span></span>
+        <span><span class="site-brand-primary">RoomSewa</span><span class="site-brand-secondary">-Sudur</span></span>
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
@@ -43,8 +43,8 @@
   <header class="home-hero">
     <div class="container hero-content">
       <span class="hero-kicker mb-4"><i class="bi bi-geo-alt-fill"></i> Student living · Mahendranagar</span>
-      <h1 class="hero-title mb-4">A better place<br>to <em>start here.</em></h1>
-      <p class="hero-copy mb-4">Find a room that feels right. Browse Mahendranagar homes, compare monthly rent, and speak directly with the house owner.</p>
+      <h1 class="hero-title mb-4">Find a room<br>that feels like <em>home.</em></h1>
+      <p class="hero-copy mb-4">Explore rooms and shared homes in Mahendranagar. Compare rent, find the right fit, and contact the house owner directly.</p>
 
       <!-- Search Form Box -->
       <div class="hero-search">
@@ -64,12 +64,17 @@
           </div>
           <div class="col-md-3">
             <label class="form-label" for="homeBudget">Monthly budget</label>
-            <input id="homeBudget" type="number" class="form-control" name="maxRent" min="1" placeholder="NPR 5,000">
+            <input id="homeBudget" type="number" class="form-control" name="maxRent" min="0" max="100000" step="1" placeholder="e.g. 10,000">
           </div>
           <div class="col-md-2">
             <button type="submit" class="btn btn-primary w-100 py-3"><i class="bi bi-search me-1"></i> Explore</button>
           </div>
         </form>
+      </div>
+      <div class="hero-trust-row mt-4" aria-label="RoomSewa benefits">
+        <span><i class="bi bi-geo-alt"></i> Mahendranagar listings</span>
+        <span><i class="bi bi-chat-dots"></i> Contact owners directly</span>
+        <span><i class="bi bi-shield-check"></i> Clear owner listing fee</span>
       </div>
     </div>
   </header>
@@ -80,12 +85,12 @@
       <div class="container">
         <div class="row align-items-end g-3 mb-4">
           <div class="col">
-            <span class="section-eyebrow">Made for Mahendranagar</span>
-            <h2 class="display-6 fw-bold mt-2 mb-1">Find your next room</h2>
-            <p class="text-secondary mb-0">Current homes, shared by local house owners.</p>
+            <span class="section-eyebrow">A local place to start</span>
+            <h2 class="display-6 fw-bold mt-2 mb-1">Rooms around Mahendranagar</h2>
+            <p class="text-secondary mb-0">Browse owner-listed rooms and shared homes, all in one place.</p>
           </div>
           <div class="col-auto">
-            <a href="pages/find-rooms.html" class="btn btn-outline-primary">Browse all rooms <i class="bi bi-arrow-right ms-1"></i></a>
+            <a href="pages/find-rooms.html" class="btn btn-outline-primary">Explore all rooms <i class="bi bi-arrow-right ms-1"></i></a>
           </div>
         </div>
         <div class="row g-4" data-featured-listings></div>
@@ -94,6 +99,29 @@
     </section>
 
     <section class="container pb-5">
+      <div class="home-benefit-grid row g-3 mb-4">
+        <div class="col-md-4">
+          <article class="home-benefit h-100">
+            <span class="home-benefit-icon"><i class="bi bi-pin-map"></i></span>
+            <h3 class="h6 fw-bold mt-3 mb-1">Focused on one city</h3>
+            <p class="small text-secondary mb-0">Find rooms in Mahendranagar without searching across unrelated locations.</p>
+          </article>
+        </div>
+        <div class="col-md-4">
+          <article class="home-benefit h-100">
+            <span class="home-benefit-icon"><i class="bi bi-whatsapp"></i></span>
+            <h3 class="h6 fw-bold mt-3 mb-1">Talk to the owner</h3>
+            <p class="small text-secondary mb-0">Contact the house owner directly on WhatsApp from an approved listing.</p>
+          </article>
+        </div>
+        <div class="col-md-4">
+          <article class="home-benefit h-100">
+            <span class="home-benefit-icon"><i class="bi bi-receipt"></i></span>
+            <h3 class="h6 fw-bold mt-3 mb-1">Know the listing fee</h3>
+            <p class="small text-secondary mb-0">The owner fee is shown before submission; students can browse for free.</p>
+          </article>
+        </div>
+      </div>
       <div class="fee-panel row align-items-center g-4">
         <div class="col-lg-8">
           <span class="section-eyebrow">Clear and simple</span>

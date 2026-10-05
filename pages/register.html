@@ -3,58 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register - RoomSewa-Sudur</title>
+  <meta name="theme-color" content="#f3f7ff">
+  <title>Create Account - RoomSewa-Sudur</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
-<body class="bg-light d-flex align-items-center min-vh-100 py-5">
-  <div class="container max-w-600">
-    <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4 bg-white">
-      <h3 class="fw-bold text-center mb-1">Create Your Account</h3>
-      <p class="text-muted text-center small mb-4">Sign up to list property or start searching rooms.</p>
+<body class="auth-page">
+  <main class="auth-shell auth-shell-wide">
+    <section class="auth-layout" aria-label="Create a RoomSewa-Sudur account">
+      <aside class="auth-showcase auth-showcase-register">
+        <a class="auth-brand" href="../index.html" aria-label="RoomSewa-Sudur home">
+          <span class="auth-brand-mark" aria-hidden="true"><i class="bi bi-house-heart-fill"></i></span>
+          <span><strong>RoomSewa</strong><span>-Sudur</span></span>
+        </a>
+        <div class="auth-showcase-copy">
+          <span class="auth-eyebrow"><i class="bi bi-stars"></i> Start with the right place</span>
+          <h1>A better room search starts right here.</h1>
+          <p>Create an account to find a room or share your space with people looking in Mahendranagar.</p>
+        </div>
+        <div class="auth-benefits">
+          <span><i class="bi bi-check-circle-fill"></i> Free account for students and owners</span>
+          <span><i class="bi bi-check-circle-fill"></i> Clear one-time owner listing fee</span>
+          <span><i class="bi bi-check-circle-fill"></i> Direct WhatsApp contact on approved listings</span>
+        </div>
+        <div class="auth-showcase-decoration" aria-hidden="true"><i class="bi bi-key"></i></div>
+      </aside>
 
-      <div class="alert alert-warning d-none" role="alert" data-firebase-setup></div>
-      <div class="alert d-none" role="status" data-form-status></div>
-      <form id="registerForm">
-        <label class="form-label small fw-bold mb-2">I want to join as a:</label>
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <input type="radio" class="btn-check" name="role" id="roleTenant" value="tenant" checked>
-            <label class="btn btn-outline-primary w-100 py-2" for="roleTenant">Tenant / Student</label>
-          </div>
-          <div class="col-6">
-            <input type="radio" class="btn-check" name="role" id="roleOwner" value="owner">
-            <label class="btn btn-outline-primary w-100 py-2" for="roleOwner">Room Owner</label>
-          </div>
+      <div class="auth-form-panel auth-register-panel">
+        <div class="auth-mobile-brand">
+          <a class="site-brand" href="../index.html" aria-label="RoomSewa-Sudur home">
+            <span class="brand-mark" aria-hidden="true"><i class="bi bi-house-heart-fill"></i></span>
+            <span><span class="site-brand-primary">RoomSewa</span><span class="site-brand-secondary">-Sudur</span></span>
+          </a>
+        </div>
+        <div class="auth-form-heading">
+          <span class="auth-step-label">Join the Mahendranagar community</span>
+          <h2>Create your account</h2>
+          <p>Choose how you’ll use RoomSewa. You can get started in just a minute.</p>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold" for="registerName">Full Name</label>
-          <input id="registerName" name="name" type="text" class="form-control" autocomplete="name" required maxlength="100">
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold" for="registerEmail">Email Address</label>
-          <input id="registerEmail" name="email" type="email" class="form-control" autocomplete="email" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold" for="registerPhone">Phone Number</label>
-          <input id="registerPhone" name="phone" type="tel" class="form-control" autocomplete="tel" required>
-        </div>
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <label class="form-label small fw-bold" for="registerPassword">Password</label>
-            <input id="registerPassword" name="password" type="password" class="form-control" autocomplete="new-password" minlength="8" required>
+        <div class="alert alert-warning d-none" role="alert" data-firebase-setup></div>
+        <div class="alert d-none" role="status" data-form-status aria-live="polite"></div>
+        <form id="registerForm" class="auth-form">
+          <fieldset class="border-0 p-0 mb-3">
+            <legend class="form-label">I’m joining as a</legend>
+            <div class="auth-role-options">
+              <div>
+                <input type="radio" class="btn-check" name="role" id="roleTenant" value="tenant" checked>
+                <label class="auth-role-option" for="roleTenant">
+                  <span class="auth-role-icon"><i class="bi bi-mortarboard"></i></span>
+                  <span><strong>Student / Tenant</strong><small>Find a room to rent</small></span>
+                  <i class="bi bi-check-circle-fill auth-role-check" aria-hidden="true"></i>
+                </label>
+              </div>
+              <div>
+                <input type="radio" class="btn-check" name="role" id="roleOwner" value="owner">
+                <label class="auth-role-option" for="roleOwner">
+                  <span class="auth-role-icon"><i class="bi bi-house-add"></i></span>
+                  <span><strong>House owner</strong><small>List a room for rent</small></span>
+                  <i class="bi bi-check-circle-fill auth-role-check" aria-hidden="true"></i>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="registerName">Full name</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-person" aria-hidden="true"></i>
+                <input id="registerName" name="name" type="text" class="form-control" autocomplete="name" placeholder="Your name" required maxlength="100">
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="registerPhone">Phone number</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-telephone" aria-hidden="true"></i>
+                <input id="registerPhone" name="phone" type="tel" class="form-control" autocomplete="tel" placeholder="98XXXXXXXX" required>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="registerEmail">Email address</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-envelope" aria-hidden="true"></i>
+                <input id="registerEmail" name="email" type="email" class="form-control" autocomplete="email" placeholder="you@example.com" required>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="registerPassword">Password</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-lock" aria-hidden="true"></i>
+                <input id="registerPassword" name="password" type="password" class="form-control" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required>
+                <button class="auth-password-toggle" type="button" data-password-toggle="registerPassword" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="confirmPassword">Confirm password</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-lock" aria-hidden="true"></i>
+                <input id="confirmPassword" name="confirmPassword" type="password" class="form-control" autocomplete="new-password" placeholder="Enter it again" minlength="8" required>
+                <button class="auth-password-toggle" type="button" data-password-toggle="confirmPassword" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
+              </div>
+            </div>
           </div>
-          <div class="col-6">
-            <label class="form-label small fw-bold" for="confirmPassword">Confirm Password</label>
-            <input id="confirmPassword" name="confirmPassword" type="password" class="form-control" autocomplete="new-password" minlength="8" required>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill fw-bold">Register Account</button>
-      </form>
-      <p class="text-center text-muted small mt-3 mb-0">Already registered? <a href="login.html">Sign in</a></p>
-    </div>
-  </div>
+          <p class="auth-form-hint mt-3"><i class="bi bi-shield-check"></i> Your details are used to set up and manage your account.</p>
+          <button type="submit" class="btn btn-primary auth-submit">
+            <span>Create my account</span><i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+        </form>
+        <p class="auth-switch-prompt">Already have an account? <a href="login.html">Sign in</a></p>
+        <a class="auth-back-home" href="../index.html"><i class="bi bi-arrow-left"></i> Back to RoomSewa home</a>
+      </div>
+    </section>
+    <p class="auth-footer-note">RoomSewa-Sudur <span aria-hidden="true">·</span> Local rooms, direct connections</p>
+  </main>
   <script type="module" src="../assets/js/main.js"></script>
 </body>
 </html>

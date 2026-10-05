@@ -30,6 +30,7 @@ import {
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-functions.js";
 import { adminEmail, adminUsername } from "./firebase-config.js";
 import { auth, db, firebaseConfigured, functions, storage } from "./firebase-client.js";
+import { filterListings } from "./listing-filters.js";
 
 const city = "Mahendranagar";
 const cityCenter = [28.9639, 80.1778];
@@ -236,41 +237,106 @@ function makeListingCard(listing, id) {
   const column = document.createElement("div");
   column.className = "col-md-6 col-lg-4";
   const card = document.createElement("article");
-  card.className = "card h-100 border-0 shadow-sm rounded-3 overflow-hidden";
+  card.className = "room-card h-100";
 
-  const image = document.createElement("img");
-  image.className = "card-img-top room-card-img";
-  image.src = listing.imageUrls?.[0] || "";
-  image.alt = listing.title || "Room in Mahendranagar";
-  image.loading = "lazy";
-  card.append(image);
+  const makeImageFallback = () => {
+    const fallback = document.createElement("div");
+    fallback.className = "room-card-image-fallback";
+    fallback.setAttribute("aria-hidden", "true");
+    const icon = document.createElement("i");
+    icon.className = "bi bi-house-door";
+    fallback.append(icon);
+    return fallback;
+  };
+
+  const media = document.createElement("div");
+  media.className = "room-card-media";
+  const imageUrl = Array.isArray(listing.imageUrls) ? listing.imageUrls[0] : "";
+  if (typeof imageUrl === "string" && imageUrl.trim()) {
+    const image = document.createElement("img");
+    image.className = "room-card-img";
+    image.src = imageUrl;
+    image.alt = listing.title ? `Photo of ${listing.title}` : "Room in Mahendranagar";
+    image.loading = "lazy";
+    image.addEventListener("error", () => {
+      image.replaceWith(makeImageFallback());
+    }, { once: true });
+    media.append(image);
+  } else {
+    media.append(makeImageFallback());
+  }
+
+  const type = document.createElement("span");
+  type.className = "room-card-type";
+  type.textContent = listing.type || "Room";
+  media.append(type);
 
   const body = document.createElement("div");
-  body.className = "card-body p-4";
-  const location = document.createElement("span");
-  location.className = "text-muted small";
-  location.textContent = listing.area ? `${listing.area}, ${city}` : city;
+  body.className = "room-card-body";
+  const location = document.createElement("p");
+  location.className = "room-card-location";
+  const locationIcon = document.createElement("i");
+  locationIcon.className = "bi bi-geo-alt";
+  locationIcon.setAttribute("aria-hidden", "true");
+  location.append(locationIcon, document.createTextNode(` ${listing.area ? `${listing.area}, ` : ""}${city}`));
   const title = document.createElement("h3");
-  title.className = "h5 card-title fw-bold mt-2 mb-2";
+  title.className = "room-card-title";
   title.textContent = listing.title || "Room listing";
-  const features = document.createElement("p");
-  features.className = "text-muted small";
-  features.textContent = [listing.type, ...(listing.amenities || [])].join(" · ");
+  const description = document.createElement("p");
+  description.className = "room-card-description";
+  const listingDescription = typeof listing.description === "string" ? listing.description.trim() : "";
+  description.textContent = listingDescription
+    ? `${listingDescription.slice(0, 112)}${listingDescription.length > 112 ? "…" : ""}`
+    : "View room details and contact the house owner.";
+
+  const amenities = document.createElement("div");
+  amenities.className = "room-card-amenities";
+  (Array.isArray(listing.amenities) ? listing.amenities : []).slice(0, 3).forEach((amenity) => {
+    const chip = document.createElement("span");
+    chip.className = "room-card-amenity";
+    chip.textContent = amenity;
+    amenities.append(chip);
+  });
+
+  const availability = document.createElement("span");
+  availability.className = "room-card-availability";
+  if (listing.availableFrom) {
+    const availableDate = new Date(listing.availableFrom);
+    if (!Number.isNaN(availableDate.getTime())) {
+      availability.textContent = `Available ${availableDate.toLocaleDateString("en-NP", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      })}`;
+    }
+  }
+
   const footer = document.createElement("div");
-  footer.className = "d-flex justify-content-between align-items-center pt-2 border-top";
+  footer.className = "room-card-footer";
+  const rent = document.createElement("div");
+  rent.className = "room-card-rent";
   const price = document.createElement("span");
-  price.className = "fw-bold text-primary";
-  price.textContent = `NPR ${Number(listing.rent).toLocaleString("en-IN")}/month`;
+  price.className = "room-card-price";
+  const monthlyRent = Number(listing.rent);
+  price.textContent = Number.isFinite(monthlyRent) ? `NPR ${monthlyRent.toLocaleString("en-IN")}` : "Rent on request";
+  const rentPeriod = document.createElement("span");
+  rentPeriod.className = "room-card-rent-period";
+  rentPeriod.textContent = Number.isFinite(monthlyRent) ? "per month" : "";
+  rent.append(price, rentPeriod);
   const link = document.createElement("a");
-  link.className = "btn btn-primary btn-sm rounded-pill";
+  link.className = "room-card-link";
   const detailsPath = window.location.pathname.includes("/pages/")
     ? "room-details.html"
     : "pages/room-details.html";
   link.href = `${detailsPath}?id=${encodeURIComponent(id)}`;
-  link.textContent = "View Details";
-  footer.append(price, link);
-  body.append(location, title, features, footer);
-  card.append(body);
+  link.setAttribute("aria-label", `View details for ${listing.title || "room listing"}`);
+  link.innerHTML = 'View room <i class="bi bi-arrow-right" aria-hidden="true"></i>';
+  footer.append(rent, link);
+  body.append(location, title, description);
+  if (amenities.childElementCount) body.append(amenities);
+  if (availability.textContent) body.append(availability);
+  body.append(footer);
+  card.append(media, body);
   column.append(card);
   return column;
 }
@@ -294,17 +360,6 @@ async function loadListings(container, featured = false) {
     if (featured) {
       renderListings(container, availableListings.slice(0, 3));
     } else {
-      const params = new URLSearchParams(window.location.search);
-      const requestedType = params.get("type");
-      if (requestedType) {
-        const typeInput = document.querySelector(`[name="type"][value="${CSS.escape(requestedType)}"]`);
-        if (typeInput) typeInput.checked = true;
-      }
-      const maxRent = Number(params.get("maxRent"));
-      if (maxRent >= 0 && params.has("maxRent")) {
-        const range = document.getElementById("priceRange");
-        if (range) range.value = String(Math.min(maxRent, Number(range.max)));
-      }
       applyListingFilters();
     }
     if (!availableListings.length && status) {
@@ -326,28 +381,90 @@ function applyListingFilters() {
   const container = document.querySelector("[data-listings]");
   if (!container) return;
   const filterForm = document.getElementById("listingFilters");
-  const selectedTypes = new Set(
-    Array.from(filterForm?.querySelectorAll('[name="type"]:checked') || [], (input) => input.value)
-  );
-  const selectedAmenities = Array.from(
-    filterForm?.querySelectorAll('[name="amenity"]:checked') || [],
-    (input) => input.value
-  );
-  const maxRent = Number(document.getElementById("priceRange")?.value || Infinity);
-  const sort = document.querySelector("[data-listing-sort]")?.value;
-  const filtered = availableListings
-    .filter((listing) => !selectedTypes.size || selectedTypes.has(listing.type))
-    .filter((listing) => Number(listing.rent) <= maxRent)
-    .filter((listing) => selectedAmenities.every((amenity) => (listing.amenities || []).includes(amenity)));
-  if (sort === "Price: Low to High") filtered.sort((a, b) => Number(a.rent) - Number(b.rent));
-  if (sort === "Price: High to Low") filtered.sort((a, b) => Number(b.rent) - Number(a.rent));
-  if (sort === "Most Recent") filtered.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  const range = document.getElementById("priceRange");
+  const filtered = filterListings(availableListings, {
+    types: Array.from(filterForm?.querySelectorAll('[name="type"]:checked') || [], (input) => input.value),
+    amenities: Array.from(filterForm?.querySelectorAll('[name="amenity"]:checked') || [], (input) => input.value),
+    area: filterForm?.elements.area?.value,
+    keyword: filterForm?.elements.keyword?.value,
+    minRent: filterForm?.elements.minRent?.value,
+    maxRent: range ? range.value : Infinity,
+    sort: document.querySelector("[data-listing-sort]")?.value
+  });
   renderListings(container, filtered);
   const status = document.querySelector("[data-listing-status]");
+  const count = document.querySelector("[data-listing-count]");
+  if (count) {
+    count.textContent = `${filtered.length} ${filtered.length === 1 ? "room" : "rooms"}`;
+  }
   if (status) {
     if (filtered.length) status.classList.add("d-none");
-    else showStatus(status, availableListings.length ? "No Mahendranagar rooms match those filters." : "There are no approved room listings in Mahendranagar yet.", "info");
+    else showStatus(status, availableListings.length
+      ? "No rooms match those filters. Try widening your area or rent range, or clear the filters."
+      : "There are no approved room listings in Mahendranagar yet.", "info");
   }
+}
+
+function updateRentRangeOutput() {
+  const range = document.getElementById("priceRange");
+  const output = range?.closest(".mb-3")?.querySelector("output");
+  if (range && output) {
+    output.value = `NPR ${Number(range.value).toLocaleString("en-IN")}`;
+  }
+}
+
+function restoreListingFiltersFromUrl() {
+  const form = document.getElementById("listingFilters");
+  if (!form) return;
+  const params = new URLSearchParams(window.location.search);
+  for (const requestedType of params.getAll("type")) {
+    const typeInput = Array.from(form.querySelectorAll('[name="type"]'))
+      .find((input) => input.value === requestedType);
+    if (typeInput) typeInput.checked = true;
+  }
+  for (const [parameter, selector] of [["minRent", '[name="minRent"]'], ["maxRent", "#priceRange"]]) {
+    const input = form.querySelector(selector);
+    const value = Number(params.get(parameter));
+    if (input && params.has(parameter) && value >= Number(input.min || 0)) {
+      input.value = String(Math.min(value, Number(input.max)));
+    }
+  }
+  const sort = params.get("sort");
+  const sortSelect = document.querySelector("[data-listing-sort]");
+  if (sort && sortSelect && Array.from(sortSelect.options).some((option) => option.value === sort)) {
+    sortSelect.value = sort;
+  }
+  const areaInput = form.querySelector('[name="area"]');
+  const keywordInput = form.querySelector('[name="keyword"]');
+  if (areaInput) areaInput.value = params.get("area") || "";
+  if (keywordInput) keywordInput.value = params.get("keyword") || "";
+  const selectedAmenities = new Set(params.getAll("amenity"));
+  form.querySelectorAll('[name="amenity"]').forEach((input) => {
+    input.checked = selectedAmenities.has(input.value);
+  });
+  updateRentRangeOutput();
+}
+
+function updateFilterUrl() {
+  if (!document.getElementById("listingFilters")) return;
+  const params = new URLSearchParams();
+  const form = document.getElementById("listingFilters");
+  const area = String(form.elements.area?.value || "").trim();
+  const keyword = String(form.elements.keyword?.value || "").trim();
+  const minRent = form.elements.minRent?.value;
+  const maxRent = document.getElementById("priceRange")?.value;
+  if (area) params.set("area", area);
+  if (keyword) params.set("keyword", keyword);
+  if (minRent) params.set("minRent", minRent);
+  if (maxRent && Number(maxRent) < Number(document.getElementById("priceRange").max)) {
+    params.set("maxRent", maxRent);
+  }
+  form.querySelectorAll('[name="type"]:checked').forEach((input) => params.append("type", input.value));
+  form.querySelectorAll('[name="amenity"]:checked').forEach((input) => params.append("amenity", input.value));
+  const sort = document.querySelector("[data-listing-sort]")?.value;
+  if (sort && sort !== "Price: Low to High") params.set("sort", sort);
+  const queryString = params.toString();
+  window.history.replaceState(null, "", `${window.location.pathname}${queryString ? `?${queryString}` : ""}`);
 }
 
 async function submitListing(form) {
@@ -950,6 +1067,19 @@ function startAdminDashboard() {
 
 if (!firebaseConfigured) showFirebaseSetupNotice();
 
+document.querySelectorAll("[data-password-toggle]").forEach((toggle) => {
+  toggle.addEventListener("click", () => {
+    const input = document.getElementById(toggle.dataset.passwordToggle);
+    if (!(input instanceof HTMLInputElement)) return;
+    const isVisible = input.type === "text";
+    input.type = isVisible ? "password" : "text";
+    toggle.setAttribute("aria-pressed", String(!isVisible));
+    toggle.setAttribute("aria-label", isVisible ? "Show password" : "Hide password");
+    const icon = toggle.querySelector("i");
+    if (icon) icon.className = isVisible ? "bi bi-eye" : "bi bi-eye-slash";
+  });
+});
+
 document.querySelector("#registerForm")?.addEventListener("submit", (event) => {
   event.preventDefault();
   registerAccount(event.currentTarget);
@@ -1014,20 +1144,32 @@ startAdminDashboard();
 startOwnerDashboard();
 startProfileForm();
 startPaymentReturn();
+restoreListingFiltersFromUrl();
 
 const filters = document.getElementById("listingFilters");
 filters?.addEventListener("submit", (event) => {
   event.preventDefault();
   applyListingFilters();
+  updateFilterUrl();
 });
 filters?.addEventListener("reset", () => window.setTimeout(() => {
-  const range = document.getElementById("priceRange");
-  const output = range?.parentElement.querySelector("output");
-  if (range && output) output.value = `NPR ${Number(range.value).toLocaleString("en-IN")}`;
+  updateRentRangeOutput();
+  const sort = document.querySelector("[data-listing-sort]");
+  if (sort) sort.value = "Price: Low to High";
   applyListingFilters();
+  updateFilterUrl();
 }, 0));
-document.querySelector("[data-listing-sort]")?.addEventListener("change", applyListingFilters);
-document.getElementById("priceRange")?.addEventListener("input", (event) => {
-  const output = event.currentTarget.parentElement.querySelector("output");
-  if (output) output.value = `NPR ${Number(event.currentTarget.value).toLocaleString("en-IN")}`;
+filters?.addEventListener("input", (event) => {
+  if (event.target.matches("#priceRange")) updateRentRangeOutput();
+  applyListingFilters();
+  updateFilterUrl();
+});
+filters?.addEventListener("change", (event) => {
+  if (event.target.matches("#priceRange")) updateRentRangeOutput();
+  applyListingFilters();
+  updateFilterUrl();
+});
+document.querySelector("[data-listing-sort]")?.addEventListener("change", () => {
+  applyListingFilters();
+  updateFilterUrl();
 });

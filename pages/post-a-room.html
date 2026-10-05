@@ -12,9 +12,27 @@
 <body class="bg-light d-flex flex-column min-vh-100">
 
   <!-- Nav -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+  <nav class="navbar navbar-expand-lg navbar-light site-navbar sticky-top">
     <div class="container">
-      <a class="navbar-brand fw-bold text-primary fs-4" href="../index.html"><span class="brand-mark" aria-hidden="true"><i class="bi bi-house-heart-fill"></i></span>RoomSewa<span class="text-dark">-Sudur</span></a>
+      <a class="navbar-brand site-brand" href="../index.html" aria-label="RoomSewa-Sudur home">
+        <span class="brand-mark" aria-hidden="true"><i class="bi bi-house-heart-fill"></i></span>
+        <span><span class="site-brand-primary">RoomSewa</span><span class="site-brand-secondary">-Sudur</span></span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto fw-medium">
+          <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="find-rooms.html">Find Rooms</a></li>
+          <li class="nav-item"><a class="nav-link" href="how-it-works.html">How It Works</a></li>
+          <li class="nav-item"><a class="nav-link" href="about-us.html">About Us</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <a href="login.html" class="btn btn-outline-primary rounded-pill px-3">Sign In</a>
+          <a href="post-a-room.html" class="btn btn-primary rounded-pill px-3" aria-current="page">For House Owners <i class="bi bi-arrow-up-right ms-1"></i></a>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -149,6 +167,7 @@
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="../assets/js/main.js"></script>
 </body>
 </html>
