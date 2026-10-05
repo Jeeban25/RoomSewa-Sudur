@@ -1,0 +1,114 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isActiveUser() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == false;
+    }
+
+    function isOwner() {
+      return isActiveUser()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "owner";
+    }
+
+    function isWithinMahendranagar(data) {
+      return data.location == "Mahendranagar"
+        && data.latitude is number
+        && data.latitude >= 28.8
+        && data.latitude <= 29.1
+        && data.longitude is number
+        && data.longitude >= 80.0
+        && data.longitude <= 80.35;
+    }
+
+    match /users/{userId} {
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.phone is string
+        && request.resource.data.role in ["tenant", "owner"]
+        && request.resource.data.area == "Mahendranagar"
+        && request.resource.data.disabled == false;
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow update: if isAdmin()
+        || (isActiveUser()
+          && request.auth.uid == userId
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.area == "Mahendranagar"
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["name", "phone"]));
+      allow delete: if isAdmin();
+    }
+
+    match /listings/{listingId} {
+      allow read: if isAdmin()
+        || (resource.data.status == "approved" && resource.data.location == "Mahendranagar")
+        || (isActiveUser() && resource.data.ownerUid == request.auth.uid);
+
+      allow create: if isOwner()
+        && isWithinMahendranagar(request.resource.data)
+        && request.resource.data.keys().hasOnly([
+          "title", "description", "type", "rent", "availableFrom", "amenities",
+          "area", "location", "latitude", "longitude", "ownerUid", "ownerName",
+          "ownerWhatsapp", "imageUrls", "status", "paymentStatus", "createdAt"
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 2000
+        && request.resource.data.type in ["Single Room", "Shared Flat", "Hostel Space"]
+        && request.resource.data.rent is int
+        && request.resource.data.rent >= 0
+        && request.resource.data.rent <= 100000
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerName is string
+        && request.resource.data.ownerWhatsapp is string
+        && request.resource.data.ownerWhatsapp.matches("^9779[0-9]{9}$")
+        && request.resource.data.availableFrom is string
+        && request.resource.data.amenities is list
+        && request.resource.data.amenities.size() <= 10
+        && request.resource.data.imageUrls is list
+        && request.resource.data.imageUrls.size() == 0
+        && request.resource.data.status == "awaiting_payment"
+        && request.resource.data.paymentStatus == "awaiting_payment"
+        && request.resource.data.createdAt is timestamp;
+
+      allow update: if (isAdmin()
+          && isWithinMahendranagar(request.resource.data)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status"])
+          && (request.resource.data.status == resource.data.status
+            || request.resource.data.status == "rejected"
+            || (request.resource.data.status == "approved"
+              && resource.data.paymentStatus in ["paid", "waived"])))
+        || (isOwner()
+          && resource.data.ownerUid == request.auth.uid
+          && resource.data.status == "awaiting_payment"
+          && resource.data.paymentStatus == "awaiting_payment"
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["imageUrls"])
+          && request.resource.data.imageUrls is list
+          && request.resource.data.imageUrls.size() >= 2
+          && request.resource.data.imageUrls.size() <= 8);
+
+      allow delete: if isAdmin()
+        || (isOwner()
+          && resource.data.ownerUid == request.auth.uid
+          && resource.data.status == "awaiting_payment"
+          && resource.data.paymentStatus == "awaiting_payment");
+    }
+
+    match /listingPayments/{paymentId} {
+      allow read, write: if false;
+    }
+  }
+}

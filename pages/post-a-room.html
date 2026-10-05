@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>List Your Room - RoomSewa-Sudur</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+  <!-- Nav -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-primary fs-4" href="../index.html"><span class="brand-mark" aria-hidden="true"><i class="bi bi-house-heart-fill"></i></span>RoomSewa<span class="text-dark">-Sudur</span></a>
+    </div>
+  </nav>
+
+  <main class="container py-5 max-w-800 flex-grow-1">
+    <span class="section-eyebrow">Mahendranagar · For house owners</span>
+    <h1 class="display-6 fw-bold mt-2 mb-2">List your room</h1>
+    <p class="text-muted mb-4">Share your home with students. The one-time listing fee is 1.25% of one month’s rent. Fees below NPR 10.01 are waived; larger fees are paid through eSewa or Khalti.</p>
+
+    <div class="alert alert-warning d-none" role="alert" data-firebase-setup></div>
+    <div class="alert d-none" role="status" data-form-status></div>
+    <div class="d-flex flex-wrap gap-3 mb-4">
+      <div class="listing-step"><span class="listing-step-number">1</span> Room details</div>
+      <div class="listing-step"><span class="listing-step-number">2</span> Photos & location</div>
+      <div class="listing-step"><span class="listing-step-number">3</span> Payment or fee waiver</div>
+    </div>
+    <form id="listingForm" class="card border-0 shadow-sm p-4 p-md-5 bg-white" data-payment-form>
+      
+      <!-- Section 1 -->
+      <h5 class="fw-bold text-primary mb-3">1. Basic Information</h5>
+      <div class="mb-3">
+        <label class="form-label small fw-bold" for="listingTitle">Room / Flat Title</label>
+        <input id="listingTitle" name="title" type="text" class="form-control" required maxlength="120">
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" for="listingArea">Neighborhood / Area</label>
+          <input id="listingArea" name="area" type="text" class="form-control" placeholder="Optional area in Mahendranagar" maxlength="100">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" for="listingDescription">Description</label>
+          <textarea id="listingDescription" name="description" class="form-control" rows="2" maxlength="2000" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold" for="ownerWhatsapp">House owner's WhatsApp number</label>
+          <input id="ownerWhatsapp" name="ownerWhatsapp" type="tel" class="form-control" inputmode="tel" autocomplete="tel" placeholder="98XXXXXXXX" pattern="(?:\+?977)?9\d{9}" required aria-describedby="whatsappHelp">
+          <div id="whatsappHelp" class="form-text">Use your Nepal mobile number. It will appear on the approved listing so students can contact you.</div>
+        </div>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">Location / Area</label>
+          <select class="form-select">
+            <option selected>Mahendranagar</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" for="listingType">Room Type</label>
+          <select id="listingType" name="type" class="form-select" required>
+            <option value="Single Room">Single Room</option>
+            <option value="Shared Flat">Shared Flat</option>
+            <option value="Hostel Space">Hostel Space</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Section 2 -->
+      <h5 class="fw-bold text-primary mb-3">2. Pricing & Availability</h5>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" for="listingRent">Monthly Rent (NPR)</label>
+          <input id="listingRent" name="rent" type="number" class="form-control" min="0" max="100000" step="1" required aria-describedby="rentPaymentHelp">
+          <div id="rentPaymentHelp" class="form-text">Choose a whole monthly rent from NPR 0 to NPR 100,000. The listing fee is exactly 1.25% of this amount.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" for="availableFrom">Available From</label>
+          <input id="availableFrom" name="availableFrom" type="date" class="form-control" required>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Section 3 -->
+      <h5 class="fw-bold text-primary mb-3">3. Amenities & Facilities</h5>
+      <div class="row g-2 mb-3">
+        <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="Free WiFi" id="amenityWifi"><label class="form-check-label small" for="amenityWifi">Free WiFi</label></div></div>
+        <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="Attached Bathroom" id="amenityBath"><label class="form-check-label small" for="amenityBath">Attached Bathroom</label></div></div>
+        <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="Kitchen Access" id="amenityKitchen"><label class="form-check-label small" for="amenityKitchen">Kitchen Access</label></div></div>
+        <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="Bike Parking" id="amenityParking"><label class="form-check-label small" for="amenityParking">Bike Parking</label></div></div>
+        <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="24h Water Supply" id="amenityWater"><label class="form-check-label small" for="amenityWater">24h Water Supply</label></div></div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Section 4 -->
+      <h5 class="fw-bold text-primary mb-3">4. Upload Photos</h5>
+      <label for="listingPhotos" class="border-2 border-dashed rounded-3 p-4 text-center bg-light mb-4 d-block cursor-pointer">
+        <i class="bi bi-cloud-arrow-up display-4 text-secondary"></i>
+        <p class="mb-1 fw-bold">Choose photos of your room</p>
+        <span class="text-muted small d-block">Select at least 2 photos. Maximum 5MB per file.</span>
+        <input id="listingPhotos" name="photos" type="file" class="form-control mt-3" accept="image/*" multiple required>
+      </label>
+
+      <h5 class="fw-bold text-primary mb-2">5. Pin the room on the map</h5>
+      <p class="text-muted small">Click the map to set the location. The map is provided by OpenStreetMap.</p>
+      <div id="listingMap" class="rounded-3 mb-3" style="height: 320px;" aria-label="Select room location on the map"></div>
+      <input id="listingLatitude" name="latitude" type="hidden">
+      <input id="listingLongitude" name="longitude" type="hidden">
+
+      <div class="listing-fee-box p-3 p-md-4 my-3">
+        <div class="d-flex justify-content-between align-items-center gap-3">
+          <div>
+            <span class="small text-uppercase fw-bold text-secondary">One-time listing fee · 1.25%</span>
+            <div class="small text-muted">Calculated from one month of rent</div>
+          </div>
+          <strong class="h3 text-primary mb-0" data-listing-fee>NPR 0.00</strong>
+        </div>
+      </div>
+      <p class="small text-muted" data-fee-note>The listing fee is 1.25% of one month's rent.</p>
+
+      <fieldset class="border-0 p-0 mb-4" data-payment-options>
+        <legend class="form-label small fw-bold mb-2">Choose how to pay</legend>
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="payment-option d-flex align-items-center gap-3">
+              <input class="form-check-input m-0" type="radio" name="paymentProvider" value="esewa" checked>
+              <span><strong class="d-block">eSewa</strong><span class="small text-muted">Secure online payment</span></span>
+            </label>
+          </div>
+          <div class="col-sm-6">
+            <label class="payment-option d-flex align-items-center gap-3">
+              <input class="form-check-input m-0" type="radio" name="paymentProvider" value="khalti">
+              <span><strong class="d-block">Khalti</strong><span class="small text-muted">Secure online payment</span></span>
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      <p class="small text-muted">Your room is sent for review after payment is confirmed, or immediately when the fee is below NPR 10.01 and waived. Students do not pay to browse or contact owners.</p>
+      <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold" data-submit-listing><span data-submit-label>Continue to secure payment</span> <i class="bi bi-arrow-right ms-1"></i></button>
+    </form>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="../assets/js/main.js"></script>
+</body>
+</html>

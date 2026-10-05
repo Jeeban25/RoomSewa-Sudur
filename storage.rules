@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isActiveOwner(ownerUid) {
+      return signedIn()
+        && request.auth.uid == ownerUid
+        && firestore.get(/databases/(default)/documents/users/$(ownerUid)).data.role == "owner"
+        && firestore.get(/databases/(default)/documents/users/$(ownerUid)).data.disabled == false;
+    }
+
+    function isAwaitingListing(ownerUid, listingId) {
+      return firestore.get(/databases/(default)/documents/listings/$(listingId)).data.ownerUid == ownerUid
+        && firestore.get(/databases/(default)/documents/listings/$(listingId)).data.status == "awaiting_payment"
+        && firestore.get(/databases/(default)/documents/listings/$(listingId)).data.paymentStatus == "awaiting_payment";
+    }
+
+    match /listings/{ownerUid}/{listingId}/{fileName} {
+      allow read: if isAdmin()
+        || (isActiveOwner(ownerUid) && isAwaitingListing(ownerUid, listingId))
+        || (firestore.get(/databases/(default)/documents/listings/$(listingId)).data.status == "approved"
+          && firestore.get(/databases/(default)/documents/listings/$(listingId)).data.location == "Mahendranagar");
+
+      allow write: if isAdmin()
+        || (isActiveOwner(ownerUid)
+          && isAwaitingListing(ownerUid, listingId)
+          && ((request.resource != null
+              && request.resource.size <= 5 * 1024 * 1024
+              && request.resource.contentType.matches("image/.*"))
+            || request.resource == null));
+    }
+  }
+}

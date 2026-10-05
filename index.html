@@ -3,112 +3,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoomSewa-Sudur - Find Your Perfect Room</title>
-
-  <!-- Favicon -->
-  <link rel="icon" href="assets/icons/favicon.ico" type="image/x-icon">
+  <title>Student Rentals in Mahendranagar - RoomSewa-Sudur</title>
 
   <!-- Bootstrap 5 CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Custom Component & Global Styles -->
-  <link rel="stylesheet" href="assets/css/components/navbar.css">
-  <link rel="stylesheet" href="assets/css/components/card.css">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="d-flex flex-column min-vh-100">
 
   <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top custom-navbar">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center" href="index.html">
-        <img src="assets/images/logo.jpg" alt="RoomSewa-Sudur Logo" class="brand-logo me-2" onerror="this.style.display='none'">
+        <span class="brand-mark" aria-hidden="true"><i class="bi bi-house-heart-fill"></i></span>
         <span class="fw-bold text-primary fs-4">RoomSewa<span class="text-dark">-Sudur</span></span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto align-items-center">
+        <ul class="navbar-nav me-auto ms-lg-4 fw-medium">
           <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="pages/about.html">About Us</a></li>
-          <li class="nav-item"><a class="nav-link" href="pages/contact.html">Contact</a></li>
-          <li class="nav-item ms-lg-2">
-            <a class="btn btn-primary px-3 rounded-pill" href="#">List Room</a>
-          </li>
+          <li class="nav-item"><a class="nav-link" href="pages/find-rooms.html">Find Rooms</a></li>
+          <li class="nav-item"><a class="nav-link" href="pages/how-it-works.html">How It Works</a></li>
+          <li class="nav-item"><a class="nav-link" href="pages/about-us.html">About Us</a></li>
         </ul>
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          <a href="pages/login.html" class="btn btn-outline-primary rounded-pill px-3">Sign In</a>
+          <a href="pages/post-a-room.html" class="btn btn-primary rounded-pill px-3">For House Owners <i class="bi bi-arrow-up-right ms-1"></i></a>
+        </div>
       </div>
     </div>
   </nav>
 
-  <!-- Hero Section -->
-  <header class="hero-section text-center text-white py-5">
-    <div class="container py-4">
-      <h1 class="display-4 fw-bold mb-3">Find Rooms & Apartments in Far-West Nepal</h1>
-      <p class="lead mb-4">Affordable, verified, and hassle-free rental listings near you.</p>
-      <form class="row g-2 justify-content-center bg-white p-3 rounded shadow max-w-700 mx-auto" id="search-form">
-        <div class="col-md-5">
-          <input type="text" class="form-control" placeholder="City or Location (e.g., Mahendranagar)">
-        </div>
-        <div class="col-md-4">
-          <select class="form-select">
-            <option selected>Room Type...</option>
-            <option value="1">Single Room</option>
-            <option value="2">Flat / Apartment</option>
-            <option value="3">Commercial Space</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <button type="submit" class="btn btn-primary w-100">Search</button>
-        </div>
-      </form>
+  <!-- Hero Banner -->
+  <header class="home-hero">
+    <div class="container hero-content">
+      <span class="hero-kicker mb-4"><i class="bi bi-geo-alt-fill"></i> Student living · Mahendranagar</span>
+      <h1 class="hero-title mb-4">A better place<br>to <em>start here.</em></h1>
+      <p class="hero-copy mb-4">Find a room that feels right. Browse Mahendranagar homes, compare monthly rent, and speak directly with the house owner.</p>
+
+      <!-- Search Form Box -->
+      <div class="hero-search">
+        <form action="pages/find-rooms.html" method="get" class="row g-2 align-items-end text-start">
+          <div class="col-md-4">
+            <label class="form-label" for="homeLocation">Your area</label>
+            <input id="homeLocation" class="form-control" value="Mahendranagar" aria-label="Location" readonly>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="homeRoomType">Room type</label>
+            <select id="homeRoomType" class="form-select" name="type">
+              <option value="">All Types</option>
+              <option value="Single Room">Single Room</option>
+              <option value="Shared Flat">Shared Flat</option>
+              <option value="Hostel Space">Hostel Space</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="homeBudget">Monthly budget</label>
+            <input id="homeBudget" type="number" class="form-control" name="maxRent" min="1" placeholder="NPR 5,000">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100 py-3"><i class="bi bi-search me-1"></i> Explore</button>
+          </div>
+        </form>
+      </div>
     </div>
   </header>
 
-  <!-- Room Listings Section -->
-  <main class="container my-5 flex-grow-1">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="h3 fw-bold mb-0">Featured Listings</h2>
-      <a href="#" class="text-primary text-decoration-none fw-semibold">View All &rarr;</a>
-    </div>
-
-    <!-- Listings Grid -->
-    <div class="row g-4" id="listings-container">
-      <div class="col-md-6 col-lg-4">
-        <div class="card room-card h-100 border-0 shadow-sm">
-          <div class="card-img-wrapper position-relative">
-            <span class="badge bg-success position-absolute top-0 start-0 m-3">Available</span>
-            <img src="assets/images/logo.jpg" class="card-img-top" alt="Room Sample" onerror="this.src='https://via.placeholder.com/400x200?text=Room+Image'">
+  <!-- Quick Stats -->
+  <main>
+    <section class="home-section">
+      <div class="container">
+        <div class="row align-items-end g-3 mb-4">
+          <div class="col">
+            <span class="section-eyebrow">Made for Mahendranagar</span>
+            <h2 class="display-6 fw-bold mt-2 mb-1">Find your next room</h2>
+            <p class="text-secondary mb-0">Current homes, shared by local house owners.</p>
           </div>
-          <div class="card-body">
-            <span class="text-muted small">Bhimdatta, Kanchanpur</span>
-            <h5 class="card-title fw-bold mt-1 mb-2">Modern Single Room</h5>
-            <p class="card-text text-secondary small">Near Far Western University campus, 24/7 water facility.</p>
-            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-              <span class="text-primary fw-bold fs-5">Rs. 5,000 <small class="text-muted fs-6">/mo</small></span>
-              <a href="#" class="btn btn-outline-primary btn-sm rounded-pill">View Details</a>
-            </div>
+          <div class="col-auto">
+            <a href="pages/find-rooms.html" class="btn btn-outline-primary">Browse all rooms <i class="bi bi-arrow-right ms-1"></i></a>
           </div>
         </div>
+        <div class="row g-4" data-featured-listings></div>
+        <div class="mt-3" data-listing-status role="status"></div>
       </div>
-    </div>
+    </section>
+
+    <section class="container pb-5">
+      <div class="fee-panel row align-items-center g-4">
+        <div class="col-lg-8">
+          <span class="section-eyebrow">Clear and simple</span>
+          <h2 class="h2 fw-bold mt-2">Students browse for free.<br>House owners pay only to list.</h2>
+          <p class="text-secondary mb-lg-0">A one-time listing fee of <strong>1.25% of one month’s rent</strong> is normally paid when you submit a room. Fees below NPR 10.01 are waived. No tenant booking fee or monthly subscription.</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <span class="fee-chip"><i class="bi bi-shield-check me-2"></i> Pay by eSewa or Khalti</span>
+          <p class="small text-secondary mt-2 mb-0">Fee is calculated from the monthly rent you enter.</p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Footer -->
-  <footer class="bg-dark text-white py-4 mt-auto">
-    <div class="container text-center text-md-between d-flex flex-column flex-md-row justify-content-between align-items-center">
-      <p class="mb-2 mb-md-0">&copy; 2026 RoomSewa-Sudur. All rights reserved.</p>
-      <ul class="list-inline mb-0">
-        <li class="list-inline-item"><a href="index.html" class="text-white-50 text-decoration-none">Home</a></li>
-        <li class="list-inline-item me-3"><a href="pages/about.html" class="text-white-50 text-decoration-none">About</a></li>
-        <li class="list-inline-item"><a href="pages/contact.html" class="text-white-50 text-decoration-none">Contact</a></li>
-      </ul>
+  <footer class="site-footer pt-5 pb-3 mt-auto">
+    <div class="container">
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+          <h5 class="fw-bold text-white mb-3">RoomSewa-Sudur</h5>
+          <p class="small">A local room-finding place for Mahendranagar students and house owners.</p>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6 class="fw-bold mb-3">Location</h6>
+          <ul class="list-unstyled small text-secondary">
+            <li><a href="pages/find-rooms.html" class="text-decoration-none text-secondary">Mahendranagar</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-3">
+          <h6 class="fw-bold mb-3">For Students</h6>
+          <ul class="list-unstyled small text-secondary">
+            <li><a href="pages/find-rooms.html" class="text-decoration-none text-secondary">Browse Single Rooms</a></li>
+            <li><a href="pages/find-rooms.html" class="text-decoration-none text-secondary">Hostel Listings</a></li>
+            <li><a href="pages/how-it-works.html" class="text-decoration-none text-secondary">How to contact owners</a></li>
+            <li><a href="pages/how-it-works.html" class="text-decoration-none text-secondary">FAQ & Support</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-3">
+          <h6 class="fw-bold mb-3">House Owners</h6>
+          <ul class="list-unstyled small text-secondary">
+            <li><a href="pages/post-a-room.html" class="text-decoration-none">List your room · 1.25% fee</a></li>
+            <li><a href="pages/landlord-dashboard.html" class="text-decoration-none">House Owner Dashboard</a></li>
+            <li><a href="pages/how-it-works.html" class="text-decoration-none text-secondary">Listing review process</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="border-secondary">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-secondary">
+        <p class="mb-0">&copy; 2026 RoomSewa-Sudur. Mahendranagar room listings.</p>
+        <a href="pages/about-us.html" class="text-secondary text-decoration-none">About RoomSewa</a>
+      </div>
     </div>
   </footer>
 
-  <!-- Bootstrap 5 JavaScript Bundle CDN -->
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Custom JS -->
-  <script src="assets/js/main.js" type="module"></script>
+  <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>
