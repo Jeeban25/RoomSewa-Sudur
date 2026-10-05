@@ -19,11 +19,15 @@
   --roomsewa-line: #e4e9f2;
   --roomsewa-accent: #bfdbfe;
   --roomsewa-radius: 1.35rem;
+  --roomsewa-font-xs: 0.8125rem;
+  --roomsewa-font-sm: 0.875rem;
+  --roomsewa-font-ui: 0.9375rem;
+  --roomsewa-font-body: 1rem;
   --roomsewa-body-font: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --roomsewa-heading-font: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
   --bs-body-font-family: var(--roomsewa-body-font);
-  --bs-body-font-size: 1rem;
-  --bs-body-line-height: 1.65;
+  --bs-body-font-size: var(--roomsewa-font-body);
+  --bs-body-line-height: 1.6;
   --bs-heading-color: var(--roomsewa-ink);
 }
 
@@ -31,8 +35,8 @@ body {
   color: var(--roomsewa-ink);
   background: var(--roomsewa-sand) !important;
   font-family: var(--roomsewa-body-font);
-  font-size: 1rem;
-  line-height: 1.65;
+  font-size: var(--roomsewa-font-body);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -81,12 +85,12 @@ h6,
 
 h1,
 .h1 {
-  font-size: clamp(2.1rem, 4.2vw, 3.25rem);
+  font-size: clamp(2.25rem, 4.2vw, 3.25rem);
 }
 
 h2,
 .h2 {
-  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  font-size: clamp(1.85rem, 3.2vw, 2.5rem);
 }
 
 h3,
@@ -105,6 +109,7 @@ p {
 
 small,
 .small {
+  font-size: var(--roomsewa-font-sm);
   line-height: 1.5;
 }
 
@@ -228,7 +233,7 @@ small,
   padding: 0.55rem 0.7rem;
   border-radius: 0.65rem;
   color: #5b6a82;
-  font-size: 0.9rem;
+  font-size: var(--roomsewa-font-ui);
   font-weight: 650;
   transition: color 150ms ease, background-color 150ms ease;
 }
@@ -250,18 +255,27 @@ small,
 }
 
 .btn {
-  --bs-btn-border-radius: 999px;
+  --bs-btn-border-radius: 0.45rem;
   display: inline-flex;
   min-height: 2.75rem;
   align-items: center;
   justify-content: center;
+  padding: 0.625rem 1rem;
+  border-radius: 0.45rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
+.btn.rounded-pill {
+  border-radius: 0.45rem !important;
+}
+
 .btn-sm {
-  min-height: 2rem;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
 }
 
 .btn-link {
@@ -391,7 +405,7 @@ textarea:focus-visible {
   border-color: var(--roomsewa-line);
   border-radius: 0.85rem;
   color: var(--roomsewa-ink);
-  font-size: 0.97rem;
+  font-size: 1rem;
   line-height: 1.5;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
@@ -399,18 +413,23 @@ textarea:focus-visible {
 .form-control.form-control-sm,
 .form-select.form-select-sm {
   min-height: 2.55rem;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
 }
 
 .form-label {
   margin-bottom: 0.5rem;
   color: var(--roomsewa-ink);
+  font-size: 0.9375rem;
   font-weight: 600;
+}
+
+.form-label.small {
+  font-size: 0.9375rem;
 }
 
 .form-text {
   color: var(--roomsewa-muted);
-  font-size: 0.86rem;
+  font-size: var(--roomsewa-font-sm);
   line-height: 1.55;
 }
 
@@ -464,10 +483,10 @@ textarea:focus-visible {
   gap: 0.5rem;
   padding: 0.5rem 0.85rem;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
+  border-radius: 0.45rem;
   color: #eaf2ff;
   background: rgba(255, 255, 255, 0.08);
-  font-size: 0.76rem;
+  font-size: var(--roomsewa-font-xs);
   font-weight: 750;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -524,7 +543,7 @@ textarea:focus-visible {
   border-radius: 0.8rem;
   color: var(--roomsewa-ink);
   background-color: #f8faff;
-  font-size: 0.94rem;
+  font-size: var(--roomsewa-font-ui);
 }
 
 .hero-search .form-control:focus,
@@ -538,7 +557,7 @@ textarea:focus-visible {
   display: block;
   margin-bottom: 0.4rem;
   color: var(--roomsewa-muted);
-  font-size: 0.68rem;
+  font-size: var(--roomsewa-font-xs);
   font-weight: 750;
   letter-spacing: 0.075em;
   text-transform: uppercase;
@@ -547,8 +566,8 @@ textarea:focus-visible {
 .hero-search-submit {
   min-height: 3rem;
   padding: 0 1.1rem;
-  border-radius: 0.8rem;
-  font-size: 0.9rem;
+  border-radius: 0.45rem;
+  font-size: var(--roomsewa-font-ui);
   white-space: nowrap;
 }
 
@@ -557,7 +576,7 @@ textarea:focus-visible {
   flex-wrap: wrap;
   gap: 0.65rem 1.35rem;
   color: rgba(255, 255, 255, 0.86);
-  font-size: 0.88rem;
+  font-size: var(--roomsewa-font-sm);
   font-weight: 600;
 }
 
@@ -573,7 +592,7 @@ textarea:focus-visible {
 
 .section-eyebrow {
   color: var(--bs-primary);
-  font-size: 0.76rem;
+  font-size: var(--roomsewa-font-xs);
   font-weight: 800;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -658,7 +677,7 @@ textarea:focus-visible {
   border-radius: 999px;
   color: #1e40af;
   background: rgba(255, 255, 255, 0.94);
-  font-size: 0.75rem;
+  font-size: var(--roomsewa-font-xs);
   font-weight: 750;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -674,7 +693,7 @@ textarea:focus-visible {
 .room-card-location {
   margin-bottom: 0.45rem;
   color: var(--roomsewa-muted);
-  font-size: 0.82rem;
+  font-size: var(--roomsewa-font-sm);
   font-weight: 600;
 }
 
@@ -702,7 +721,7 @@ textarea:focus-visible {
   margin: 0 0 0.9rem;
   overflow: hidden;
   color: var(--roomsewa-muted);
-  font-size: 0.88rem;
+  font-size: var(--roomsewa-font-ui);
   line-height: 1.55;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -720,14 +739,14 @@ textarea:focus-visible {
   border-radius: 999px;
   color: #3e526e;
   background: #f1f5fb;
-  font-size: 0.72rem;
+  font-size: var(--roomsewa-font-xs);
   font-weight: 600;
 }
 
 .room-card-availability {
   margin-bottom: 0.85rem;
   color: #365b42;
-  font-size: 0.78rem;
+  font-size: var(--roomsewa-font-xs);
   font-weight: 650;
 }
 
@@ -757,7 +776,7 @@ textarea:focus-visible {
 
 .room-card-rent-period {
   color: var(--roomsewa-muted);
-  font-size: 0.76rem;
+  font-size: var(--roomsewa-font-xs);
 }
 
 .room-card-link {
@@ -766,10 +785,10 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.35rem;
   padding: 0.55rem 0.8rem;
-  border-radius: 999px;
+  border-radius: 0.45rem;
   color: #fff;
   background: var(--bs-primary);
-  font-size: 0.8rem;
+  font-size: var(--roomsewa-font-sm);
   font-weight: 700;
   text-decoration: none;
   transition: background-color 160ms ease, transform 160ms ease;
@@ -829,7 +848,7 @@ textarea:focus-visible {
   border-radius: 999px;
   color: #32445e;
   background: #fff;
-  font-size: 0.85rem;
+  font-size: var(--roomsewa-font-ui);
   font-weight: 650;
   text-decoration: none;
   transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
@@ -871,6 +890,11 @@ textarea:focus-visible {
 .listing-page-content #listingFilters .form-label {
   margin-bottom: 0.4rem;
   color: #34445d;
+  font-size: var(--roomsewa-font-ui);
+}
+
+.listing-page-content #listingFilters .form-check-label {
+  font-size: var(--roomsewa-font-ui);
 }
 
 .listing-page-content #listingFilters .form-check {
@@ -1037,7 +1061,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.45rem;
   color: #2563eb;
-  font-size: 0.76rem;
+  font-size: var(--roomsewa-font-xs);
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -1065,7 +1089,7 @@ textarea:focus-visible {
   max-width: 25rem;
   margin: 0;
   color: rgba(239, 246, 255, 0.82);
-  font-size: 1rem;
+  font-size: var(--roomsewa-font-body);
   line-height: 1.75;
 }
 
@@ -1075,7 +1099,7 @@ textarea:focus-visible {
   padding-top: 1.4rem;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.92);
-  font-size: 0.86rem;
+  font-size: var(--roomsewa-font-sm);
   font-weight: 550;
 }
 
@@ -1112,7 +1136,7 @@ textarea:focus-visible {
   border-radius: 1rem;
   color: #eff6ff;
   background: rgba(255, 255, 255, 0.1);
-  font-size: 0.85rem;
+  font-size: var(--roomsewa-font-sm);
   line-height: 1.55;
 }
 
@@ -1139,14 +1163,18 @@ textarea:focus-visible {
 .auth-form-heading p {
   margin: 0;
   color: var(--roomsewa-muted);
-  font-size: 0.94rem;
+  font-size: var(--roomsewa-font-ui);
 }
 
 .auth-form .form-label {
   display: block;
   margin-bottom: 0.5rem;
-  font-size: 0.88rem;
+  font-size: var(--roomsewa-font-ui);
   font-weight: 700;
+}
+
+.auth-register-panel .auth-form .form-label {
+  font-size: 0.98rem;
 }
 
 .auth-input-wrap {
@@ -1184,6 +1212,11 @@ textarea:focus-visible {
   box-shadow: 0 0 0 0.22rem rgba(37, 99, 235, 0.1);
 }
 
+.auth-register-panel .auth-input-wrap .form-control {
+  min-height: 3.6rem;
+  font-size: 1rem;
+}
+
 .auth-password-toggle {
   position: absolute;
   z-index: 3;
@@ -1195,10 +1228,16 @@ textarea:focus-visible {
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 0.5rem;
+  border-radius: 0.45rem;
   color: #66758c;
   background: transparent;
   transform: translateY(-50%);
+}
+
+.auth-register-panel .auth-password-toggle {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.1rem;
 }
 
 .auth-password-toggle:hover {
@@ -1214,7 +1253,7 @@ textarea:focus-visible {
 .auth-inline-link,
 .auth-switch-prompt a {
   color: #1d4ed8;
-  font-size: 0.84rem;
+  font-size: var(--roomsewa-font-sm);
   font-weight: 700;
   text-decoration: none;
 }
@@ -1229,35 +1268,154 @@ textarea:focus-visible {
 .auth-secure-note {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  color: #69798e;
-  font-size: 0.76rem;
+  gap: 0.5rem;
+  color: #4d5d73;
+  font-size: var(--roomsewa-font-sm);
+  font-weight: 650;
+}
+
+.auth-secure-note i {
+  font-size: 0.92rem;
+  color: #3b4a62;
+}
+
+.auth-form .form-check {
+  display: flex;
+  align-items: center;
+  min-height: 1.6rem;
+  margin: 0;
+}
+
+.auth-form .form-check-input {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-top: 0;
+  border: 1px solid #d0d9e8;
+  border-radius: 0.4rem;
+  box-shadow: none;
+}
+
+.auth-form .form-check-input:checked {
+  border-color: #2563eb;
+  background-color: #2563eb;
+  box-shadow: none;
+}
+
+.auth-form .form-check-label {
+  margin-left: 0.7rem;
+  color: #1d2b41;
+  font-size: 1.02rem;
+  font-weight: 500;
 }
 
 .auth-submit {
   display: flex;
-  min-height: 3.2rem;
+  width: 100%;
+  min-height: 3.5rem;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.15rem;
-  border-radius: 0.85rem;
-  font-weight: 750;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: var(--bs-primary);
+  box-shadow: 0 0.45rem 1rem rgba(37, 99, 235, 0.2);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+.auth-submit span {
+  text-align: left;
 }
 
 .auth-submit i {
-  font-size: 1.1rem;
+  flex: 0 0 auto;
+  font-size: 1.25rem;
   transition: transform 160ms ease;
 }
 
+.auth-submit:hover:not(:disabled):not(.disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 0.6rem 1.25rem rgba(37, 99, 235, 0.28);
+}
+
 .auth-submit:hover i {
-  transform: translateX(3px);
+  transform: translateX(4px);
+}
+
+.auth-submit-login {
+  min-height: 3.5rem;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border-radius: 0.45rem;
+  background: var(--bs-primary);
+  box-shadow: none;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.auth-submit-login:hover:not(:disabled):not(.disabled) {
+  background: #1d4ed8;
+  box-shadow: none;
+}
+
+.auth-submit-register {
+  position: relative;
+  min-height: 3.75rem;
+  justify-content: center;
+  padding: 0.85rem 1.25rem;
+  font-size: 1.2rem;
+}
+
+.auth-submit-register span {
+  text-align: center;
+}
+
+.auth-submit-register i {
+  position: absolute;
+  right: 1.25rem;
+  font-size: 1.4rem;
 }
 
 .auth-switch-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.55rem;
   margin: 1.35rem 0 0.9rem;
-  color: var(--roomsewa-muted);
-  font-size: 0.86rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e3eaf5;
+  border-radius: 0.65rem;
+  color: #3f4f66;
+  background: #f8faff;
+  font-size: 0.98rem;
+  font-weight: 400;
   text-align: center;
+}
+
+.auth-switch-prompt a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid #cbdcf8;
+  border-radius: 0.4rem;
+  color: #1d4ed8;
+  background: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.auth-switch-prompt a:hover {
+  border-color: #9dbcf2;
+  color: #1e40af;
+  background: #eff6ff;
 }
 
 .auth-back-home {
@@ -1265,7 +1423,7 @@ textarea:focus-visible {
   justify-content: center;
   gap: 0.4rem;
   color: #6b7b91;
-  font-size: 0.82rem;
+  font-size: var(--roomsewa-font-sm);
   font-weight: 600;
   text-decoration: none;
 }
@@ -1281,7 +1439,7 @@ textarea:focus-visible {
 .auth-footer-note {
   margin: 1rem 0 0;
   color: #79879b;
-  font-size: 0.78rem;
+  font-size: var(--roomsewa-font-xs);
   text-align: center;
 }
 
@@ -1297,17 +1455,22 @@ textarea:focus-visible {
 }
 
 .auth-role-options > div {
+  display: flex;
   min-width: 0;
 }
 
 .auth-role-option {
-  display: flex;
-  min-height: 4.1rem;
+  display: grid;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 6.5rem;
+  grid-template-columns: 3rem minmax(0, 1fr) 1.25rem;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.7rem;
+  gap: 0.65rem;
+  padding: 0.85rem;
   border: 1px solid #dce4ef;
-  border-radius: 0.9rem;
+  border-radius: 0.45rem;
   color: var(--roomsewa-ink);
   background: #fbfcff;
   cursor: pointer;
@@ -1321,8 +1484,8 @@ textarea:focus-visible {
 
 .auth-role-icon {
   display: grid;
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 3rem;
+  height: 3rem;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 0.7rem;
@@ -1338,20 +1501,21 @@ textarea:focus-visible {
 }
 
 .auth-role-option strong {
-  overflow: hidden;
-  font-size: 0.77rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 1.05rem;
+  line-height: 1.35;
 }
 
 .auth-role-option small {
   color: var(--roomsewa-muted);
-  font-size: 0.68rem;
-  line-height: 1.3;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 .auth-role-check {
-  margin-left: auto;
+  display: grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
   color: #2563eb;
   opacity: 0;
 }
@@ -1376,8 +1540,12 @@ textarea:focus-visible {
   align-items: flex-start;
   gap: 0.45rem;
   color: var(--roomsewa-muted);
-  font-size: 0.77rem;
+  font-size: var(--roomsewa-font-sm);
   line-height: 1.5;
+}
+
+.auth-register-panel .auth-form-hint {
+  font-size: var(--roomsewa-font-ui);
 }
 
 .auth-form-hint i {
@@ -1421,7 +1589,7 @@ textarea:focus-visible {
 }
 
 [data-listing-count] {
-  font-size: 0.78rem;
+  font-size: var(--roomsewa-font-sm);
   font-weight: 700;
 }
 
@@ -1453,7 +1621,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.75rem;
   color: var(--roomsewa-muted);
-  font-size: 0.9rem;
+  font-size: var(--roomsewa-font-ui);
   font-weight: 600;
 }
 
@@ -1466,7 +1634,7 @@ textarea:focus-visible {
   border-radius: 50%;
   color: var(--bs-primary);
   background: #eaf1ff;
-  font-size: 0.78rem;
+  font-size: var(--roomsewa-font-sm);
   font-weight: 800;
 }
 
@@ -1515,7 +1683,7 @@ textarea:focus-visible {
   gap: 0.75rem;
   padding: 1.1rem 1.25rem;
   color: var(--roomsewa-ink);
-  font-size: 0.96rem;
+  font-size: var(--roomsewa-font-body);
 }
 
 .accordion-button:not(.collapsed) {
@@ -1541,7 +1709,7 @@ textarea:focus-visible {
   border-bottom-width: 1px;
   color: #607089;
   background: #f6f8fc;
-  font-size: 0.72rem;
+  font-size: var(--roomsewa-font-xs);
   font-weight: 750;
   letter-spacing: 0.045em;
   text-transform: uppercase;
@@ -1599,7 +1767,7 @@ textarea:focus-visible {
 .home-section [data-listing-status],
 .listing-page-content [data-listing-status] {
   color: var(--roomsewa-muted);
-  font-size: 0.9rem;
+  font-size: var(--roomsewa-font-ui);
 }
 
 body[data-admin-dashboard] main,
@@ -1683,7 +1851,7 @@ body[data-admin-dashboard] main > .row .card strong {
   border: 1px solid #e1eaf7;
   border-radius: 999px;
   background: #fff;
-  font-size: 0.82rem;
+  font-size: var(--roomsewa-font-sm);
 }
 
 .listing-step-number {
@@ -1725,7 +1893,7 @@ body[data-admin-dashboard] main > .row .card strong {
 
 @media (max-width: 767.98px) {
   body {
-    font-size: 0.98rem;
+    font-size: 1rem;
   }
 
   .navbar {
@@ -1759,23 +1927,23 @@ body[data-admin-dashboard] main > .row .card strong {
   .hero-search .form-select {
     padding-right: 0.55rem;
     padding-left: 0.55rem;
-    font-size: 0.8rem;
+    font-size: var(--roomsewa-font-sm);
   }
 
   .hero-search .form-label {
-    font-size: 0.62rem;
+    font-size: var(--roomsewa-font-xs);
     letter-spacing: 0.04em;
   }
 
   .hero-search-submit {
     padding-right: 0.7rem;
     padding-left: 0.7rem;
-    font-size: 0.8rem;
+    font-size: var(--roomsewa-font-sm);
   }
 
   .hero-trust-row {
     gap: 0.55rem 1rem;
-    font-size: 0.8rem;
+    font-size: var(--roomsewa-font-sm);
   }
 
   .home-section {
@@ -1805,16 +1973,16 @@ body[data-admin-dashboard] main > .row .card strong {
   .hero-search .form-control,
   .hero-search .form-select {
     min-height: 2.85rem;
-    font-size: 0.9rem;
+    font-size: var(--roomsewa-font-ui);
   }
 
   .hero-search .form-label {
-    font-size: 0.68rem;
+    font-size: var(--roomsewa-font-xs);
   }
 
   .hero-search-submit {
     min-height: 2.9rem;
-    font-size: 0.88rem;
+    font-size: var(--roomsewa-font-sm);
   }
 
   .room-type-shortcuts {
@@ -1823,7 +1991,7 @@ body[data-admin-dashboard] main > .row .card strong {
 
   .room-type-shortcut {
     padding: 0.48rem 0.7rem;
-    font-size: 0.78rem;
+    font-size: var(--roomsewa-font-sm);
   }
 
   .listing-results-toolbar > .d-flex {
@@ -1908,13 +2076,13 @@ body[data-admin-dashboard] main > .row .card strong {
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
   .auth-role-options {
     grid-template-columns: 1fr;
   }
 
   .auth-role-option {
-    min-height: 3.65rem;
+    min-height: 4.5rem;
   }
 
   .auth-form-panel {
@@ -1932,7 +2100,7 @@ body[data-admin-dashboard] main > .row .card strong {
   .site-navbar .navbar-toggler {
     margin-left: auto;
     border-color: #d4dfed;
-    border-radius: 0.65rem;
+    border-radius: 0.45rem;
     padding: 0.35rem 0.55rem;
   }
 
@@ -1975,7 +2143,7 @@ body[data-admin-dashboard] main > .row .card strong {
     width: 100%;
     padding: 0.45rem 0.6rem;
     border-radius: 0.6rem;
-    font-size: 0.84rem;
+    font-size: var(--roomsewa-font-ui);
   }
 
   .site-navbar .navbar-collapse > .d-flex {
@@ -1987,13 +2155,13 @@ body[data-admin-dashboard] main > .row .card strong {
 
   .site-navbar .navbar-collapse > .d-flex .btn {
     padding: 0.4rem 0.6rem !important;
-    font-size: 0.72rem;
+    font-size: var(--roomsewa-font-sm);
   }
 
   .site-navbar .navbar-collapse > .home-nav-actions .btn {
     min-height: 2.75rem;
     padding: 0.6rem 1rem !important;
-    font-size: 0.9rem;
+    font-size: var(--roomsewa-font-ui);
   }
 }
 
@@ -2006,13 +2174,13 @@ body[data-admin-dashboard] main > .row .card strong {
     gap: 0.25rem;
     margin-right: 0;
     padding: 0.2rem 0.3rem 0.2rem 0.2rem;
-    font-size: 0.84rem;
+    font-size: var(--roomsewa-font-ui);
   }
 
   .site-navbar .site-brand .brand-mark {
     width: 1.5rem;
     height: 1.5rem;
-    font-size: 0.76rem;
+    font-size: 0.8rem;
   }
 
 }
