@@ -14,7 +14,8 @@ service firebase.storage {
       return signedIn()
         && request.auth.uid == ownerUid
         && firestore.get(/databases/(default)/documents/users/$(ownerUid)).data.role == "owner"
-        && firestore.get(/databases/(default)/documents/users/$(ownerUid)).data.disabled == false;
+        && firestore.get(/databases/(default)/documents/users/$(ownerUid)).data.disabled == false
+        && firestore.get(/databases/(default)/documents/users/$(ownerUid)).data.approvalStatus == "approved";
     }
 
     function isAwaitingListing(ownerUid, listingId) {

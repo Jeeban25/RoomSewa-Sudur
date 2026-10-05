@@ -33,6 +33,10 @@ function requireOwner(request) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign in as a house owner first.");
 }
 
+function isApprovedProfile(profile) {
+  return profile.approvalStatus === "approved";
+}
+
 function getReturnUrl(paymentId) {
   let base;
   try {
@@ -156,6 +160,9 @@ exports.createListingPayment = onCall({
   }
   if (!ownerSnapshot.exists || ownerSnapshot.data().role !== "owner" || ownerSnapshot.data().disabled) {
     throw new HttpsError("permission-denied", "An active house-owner account is required.");
+  }
+  if (!isApprovedProfile(ownerSnapshot.data())) {
+    throw new HttpsError("permission-denied", "An administrator must approve your account first.");
   }
 
   const rent = listingSnapshot.data().rent;
@@ -309,6 +316,13 @@ exports.verifyListingPayment = onCall({
     throw new HttpsError("invalid-argument", "A payment ID is required.");
   }
   const firestore = getFirestore();
+  const ownerProfile = await firestore.collection("users").doc(request.auth.uid).get();
+  if (!ownerProfile.exists
+    || ownerProfile.data().role !== "owner"
+    || ownerProfile.data().disabled
+    || !isApprovedProfile(ownerProfile.data())) {
+    throw new HttpsError("permission-denied", "An approved, active house-owner account is required.");
+  }
   const paymentRef = firestore.collection("listingPayments").doc(paymentId);
   const paymentSnapshot = await paymentRef.get();
   const payment = paymentSnapshot.data();
@@ -377,6 +391,37 @@ exports.verifyListingPayment = onCall({
     });
   });
   return { status: "paid", listingId };
+});
+
+exports.approveAccount = onCall({ region: "asia-south1" }, async (request) => {
+  requireAdmin(request);
+  const { uid } = request.data || {};
+  if (typeof uid !== "string" || !uid) {
+    throw new HttpsError("invalid-argument", "A user ID is required.");
+  }
+
+  try {
+    const firestore = getFirestore();
+    const profileRef = firestore.collection("users").doc(uid);
+    const profile = await profileRef.get();
+    if (!profile.exists || !["tenant", "owner"].includes(profile.data().role)) {
+      throw new HttpsError("failed-precondition", "Only tenant and house-owner accounts can be approved.");
+    }
+    const auth = getAuth();
+    const target = await auth.getUser(uid);
+    if (target.customClaims?.admin === true) {
+      throw new HttpsError("failed-precondition", "Administrator accounts must be managed through the trusted Firebase Admin SDK.");
+    }
+    await auth.updateUser(uid, { disabled: false });
+    await profileRef.update({
+      approvalStatus: "approved",
+      approvedAt: new Date()
+    });
+    return { uid, approvalStatus: "approved" };
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError("internal", `Could not approve the account: ${error.message}`);
+  }
 });
 
 exports.setAccountDisabled = onCall({ region: "asia-south1" }, async (request) => {

@@ -140,9 +140,12 @@ async function registerAccount(form) {
       role,
       area: city,
       disabled: false,
+      approvalStatus: "pending",
       createdAt: serverTimestamp()
     });
-    window.location.assign(role === "owner" ? "landlord-dashboard.html" : "../index.html");
+    await signOut(auth);
+    showStatus(status, "Your account request has been submitted. You can sign in after an administrator approves it.", "success");
+    form.reset();
   } catch (error) {
     showStatus(status, `Account setup failed: ${getErrorMessage(error)}. If the account was created, contact support before trying again.`);
   } finally {
@@ -190,6 +193,11 @@ async function loginAccount(form) {
     if (!profile.exists()) {
       await signOut(auth);
       showStatus(status, "Your account is missing its profile record. Contact support before continuing.");
+      return;
+    }
+    if (profile.data().approvalStatus !== "approved") {
+      await signOut(auth);
+      showStatus(status, "Your account is waiting for administrator approval.");
       return;
     }
     const returnTo = new URLSearchParams(window.location.search).get("returnTo");
@@ -518,7 +526,8 @@ async function submitListing(form) {
   let listingId;
   try {
     const profile = await getDoc(doc(db, "users", auth.currentUser.uid));
-    if (!profile.exists() || !["owner"].includes(profile.data().role)) {
+    if (!profile.exists() || profile.data().role !== "owner"
+      || profile.data().approvalStatus !== "approved") {
       throw new Error("Only registered room owners can post a listing.");
     }
     const listingRef = doc(collection(db, "listings"));
@@ -700,13 +709,16 @@ async function loadAdminData() {
       const user = userSnapshot.data();
       const row = document.createElement("tr");
       row.append(element("td", user.name || "—"), element("td", user.email || "—"));
+      const approvalCell = element("td", user.role === "admin" || user.approvalStatus === "approved"
+        ? "Approved"
+        : "Pending approval");
       const roleCell = document.createElement("td");
       if (user.role === "admin") {
         roleCell.textContent = "Administrator";
       } else {
         const roleSelect = document.createElement("select");
         roleSelect.className = "form-select form-select-sm";
-        for (const [value, label] of [["tenant", "Student"], ["owner", "Room owner"]]) {
+        for (const [value, label] of [["tenant", "Student"], ["owner", "House Owner"]]) {
           const option = element("option", label);
           option.value = value;
           roleSelect.append(option);
@@ -725,13 +737,29 @@ async function loadAdminData() {
         });
         roleCell.append(roleSelect);
       }
-      row.append(roleCell, element("td", user.phone || "—"));
+      row.append(approvalCell, roleCell, element("td", user.phone || "—"));
       const actionCell = document.createElement("td");
       if (user.role === "admin") {
         actionCell.textContent = "Manage through trusted Firebase Admin SDK";
         row.append(actionCell);
         usersBody.append(row);
         return;
+      }
+      if (user.approvalStatus !== "approved") {
+        const approveButton = element("button", "Approve");
+        approveButton.type = "button";
+        approveButton.className = "btn btn-sm btn-success me-2";
+        approveButton.addEventListener("click", async () => {
+          approveButton.disabled = true;
+          try {
+            await httpsCallable(functions, "approveAccount")({ uid: userSnapshot.id });
+            await loadAdminData();
+          } catch (error) {
+            showStatus(status, `Could not approve account: ${getErrorMessage(error)}`);
+            approveButton.disabled = false;
+          }
+        });
+        actionCell.append(approveButton);
       }
       const accountButton = element("button", user.disabled ? "Enable" : "Disable");
       accountButton.type = "button";
@@ -837,8 +865,9 @@ function startOwnerDashboard() {
     }
     try {
       const profile = await getDoc(doc(db, "users", user.uid));
-      if (!profile.exists() || profile.data().role !== "owner") {
-        showStatus(status, "A room-owner account is required to open this dashboard.");
+      if (!profile.exists() || profile.data().role !== "owner"
+        || profile.data().approvalStatus !== "approved") {
+        showStatus(status, "An approved house-owner account is required to open this dashboard.");
         return;
       }
       document.querySelector("[data-owner-name]").textContent = profile.data().name || user.email;

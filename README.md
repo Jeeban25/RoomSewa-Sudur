@@ -6,7 +6,8 @@ RoomSewa-Sudur is focused exclusively on student room rentals in Mahendranagar.
 
 1. Create a Firebase project and register a Web app. Enable Email/Password in Authentication, create a Firestore database, and enable Storage.
 2. Copy the Web app values into `assets/js/firebase-config.js`. Set `adminEmail` to the email address of the administrator's Firebase Authentication account. The public admin username `jeeban` is mapped to that email; the password is never stored in this repository.
-3. In Firebase Authentication, create the admin user with a strong password. Do not use `1234`: it is not a secure password. Create ordinary users through the registration form; the form never permits an admin role.
+3. In Firebase Authentication, create the admin user with a strong password. Do not use `1234`: it is not a secure password. Tenant and house-owner accounts can be requested through registration, but require administrator approval before they can sign in and use the app.
+   Existing tenant and house-owner accounts also require approval after the updated rules are deployed; approve them from the Admin Dashboard.
 4. Install the Firebase CLI and authenticate it, then deploy Firestore rules, Storage rules, Functions, and Hosting:
 
    ```sh

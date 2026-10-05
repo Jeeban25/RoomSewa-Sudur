@@ -12,7 +12,8 @@ service cloud.firestore {
 
     function isActiveUser() {
       return signedIn()
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == false;
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == false
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.approvalStatus == "approved";
     }
 
     function isOwner() {
@@ -38,7 +39,8 @@ service cloud.firestore {
         && request.resource.data.phone is string
         && request.resource.data.role in ["tenant", "owner"]
         && request.resource.data.area == "Mahendranagar"
-        && request.resource.data.disabled == false;
+        && request.resource.data.disabled == false
+        && request.resource.data.approvalStatus == "pending";
       allow read: if isAdmin() || (signedIn() && request.auth.uid == userId);
       allow update: if isAdmin()
         || (isActiveUser()
