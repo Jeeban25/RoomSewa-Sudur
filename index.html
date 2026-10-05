@@ -48,12 +48,12 @@
 
       <!-- Search Form Box -->
       <div class="hero-search">
-        <form action="pages/find-rooms.html" method="get" class="row g-2 align-items-end text-start">
-          <div class="col-md-4">
+        <form action="pages/find-rooms.html" method="get" class="hero-search-form text-start">
+          <div class="hero-search-field">
             <label class="form-label" for="homeLocation">Your area</label>
             <input id="homeLocation" class="form-control" value="Mahendranagar" aria-label="Location" readonly>
           </div>
-          <div class="col-md-3">
+          <div class="hero-search-field">
             <label class="form-label" for="homeRoomType">Room type</label>
             <select id="homeRoomType" class="form-select" name="type">
               <option value="">All Types</option>
@@ -62,13 +62,11 @@
               <option value="Hostel Space">Hostel Space</option>
             </select>
           </div>
-          <div class="col-md-3">
+          <div class="hero-search-field">
             <label class="form-label" for="homeBudget">Monthly budget</label>
             <input id="homeBudget" type="number" class="form-control" name="maxRent" min="0" max="100000" step="1" placeholder="e.g. 10,000">
           </div>
-          <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100 py-3"><i class="bi bi-search me-1"></i> Explore</button>
-          </div>
+          <button type="submit" class="btn btn-primary hero-search-submit"><i class="bi bi-search me-2"></i>Explore</button>
         </form>
       </div>
       <div class="hero-trust-row mt-4" aria-label="RoomSewa benefits">
