@@ -262,7 +262,7 @@ async function loginAccount(form) {
         return;
       }
     }
-    window.location.assign(profileData.role === "owner" ? "landlord-dashboard.html" : "tenant-dashboard.html");
+    window.location.assign(profileData.role === "owner" ? "houseowner-dashboard.html" : "tenant-dashboard.html");
   } catch (error) {
     showStatus(status, getSignInErrorMessage(error, isAdminUsername));
   } finally {
@@ -1009,7 +1009,7 @@ function startTenantDashboard() {
       }
       if (!admin && profileData.role !== "tenant") {
         if (profileData.role === "owner") {
-          window.location.replace("landlord-dashboard.html");
+          window.location.replace("houseowner-dashboard.html");
           return;
         }
         showStatus(status, profileData.role === "admin"
@@ -1170,7 +1170,7 @@ function startProfileForm() {
         document.querySelector("[data-profile-dashboard-label]").textContent = "Admin dashboard";
         dashboardLink.classList.remove("d-none");
       } else if (profileData.role === "owner") {
-        dashboardLink.href = "landlord-dashboard.html";
+        dashboardLink.href = "houseowner-dashboard.html";
         document.querySelector("[data-profile-dashboard-label]").textContent = "Owner dashboard";
         dashboardLink.classList.remove("d-none");
         document.querySelector("[data-profile-owner-only]")?.classList.remove("d-none");
@@ -1360,7 +1360,7 @@ function startHomeAccountLink() {
         accountLink.href = `${pagePrefix}admin-dashboard.html`;
         accountLink.textContent = "Admin Dashboard";
       } else if (profile.exists() && profile.data().role === "owner") {
-        accountLink.href = `${pagePrefix}landlord-dashboard.html`;
+        accountLink.href = `${pagePrefix}houseowner-dashboard.html`;
         accountLink.textContent = "Owner Dashboard";
       } else if (profile.exists() && profile.data().role === "tenant") {
         accountLink.href = `${pagePrefix}tenant-dashboard.html`;
