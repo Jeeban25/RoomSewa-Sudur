@@ -54,6 +54,29 @@ function getErrorMessage(error) {
   return error instanceof Error ? error.message : "An unexpected error occurred.";
 }
 
+function getSignInErrorMessage(error, isAdminUsername) {
+  switch (error?.code) {
+    case "auth/invalid-credential":
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+      return isAdminUsername
+        ? "The admin username or password is incorrect. Check the configured admin account and password, or use Forgot password."
+        : "The email or password is incorrect. Check your details, use Forgot password, or create an account if you have not registered yet.";
+    case "auth/invalid-email":
+      return "Enter a valid email address, or use the configured admin username.";
+    case "auth/user-disabled":
+      return "This account is disabled. Contact the administrator for help.";
+    case "auth/too-many-requests":
+      return "Too many sign-in attempts. Wait a while before trying again.";
+    case "auth/network-request-failed":
+      return "Could not connect to Firebase. Check your internet connection and try again.";
+    case "auth/operation-not-allowed":
+      return "Email and password sign-in is not enabled for this Firebase project.";
+    default:
+      return getErrorMessage(error);
+  }
+}
+
 function busy(form, state) {
   const submitButton = form.querySelector('[type="submit"]');
   if (submitButton) submitButton.disabled = state;
@@ -211,7 +234,7 @@ async function loginAccount(form) {
     }
     window.location.assign(profile.data().role === "owner" ? "landlord-dashboard.html" : "../index.html");
   } catch (error) {
-    showStatus(status, getErrorMessage(error));
+    showStatus(status, getSignInErrorMessage(error, isAdminUsername));
   } finally {
     busy(form, false);
   }
@@ -526,8 +549,11 @@ async function submitListing(form) {
   let listingId;
   try {
     const profile = await getDoc(doc(db, "users", auth.currentUser.uid));
-    if (!profile.exists() || profile.data().role !== "owner"
-      || profile.data().approvalStatus !== "approved") {
+    const token = await auth.currentUser.getIdTokenResult();
+    const admin = token.claims.admin === true;
+    if (!profile.exists()
+      || (!admin && profile.data().role !== "owner")
+      || (!admin && profile.data().approvalStatus !== "approved")) {
       throw new Error("Only registered room owners can post a listing.");
     }
     const listingRef = doc(collection(db, "listings"));
@@ -865,12 +891,20 @@ function startOwnerDashboard() {
     }
     try {
       const profile = await getDoc(doc(db, "users", user.uid));
-      if (!profile.exists() || profile.data().role !== "owner"
-        || profile.data().approvalStatus !== "approved") {
+      const token = await user.getIdTokenResult();
+      const admin = token.claims.admin === true;
+      if (!profile.exists()
+        || (!admin && profile.data().role !== "owner")
+        || (!admin && profile.data().approvalStatus !== "approved")) {
         showStatus(status, "An approved house-owner account is required to open this dashboard.");
         return;
       }
       document.querySelector("[data-owner-name]").textContent = profile.data().name || user.email;
+      if (admin) {
+        document.querySelectorAll("[data-owner-admin-link]").forEach((link) => {
+          link.classList.remove("d-none");
+        });
+      }
       const snapshot = await getDocs(query(
         collection(db, "listings"),
         where("ownerUid", "==", user.uid),
@@ -1079,6 +1113,7 @@ function startAdminDashboard() {
         return;
       }
       document.querySelector("[data-admin-email]").textContent = user.email || adminUsername;
+      document.querySelector("[data-admin-owner-mode]").classList.remove("d-none");
       await loadAdminData();
     } catch (error) {
       showStatus(status, `Could not verify admin access: ${getErrorMessage(error)}`);
@@ -1094,20 +1129,26 @@ function startAdminDashboard() {
   });
 }
 
-if (!firebaseConfigured) showFirebaseSetupNotice();
-
-document.querySelectorAll("[data-password-toggle]").forEach((toggle) => {
-  toggle.addEventListener("click", () => {
-    const input = document.getElementById(toggle.dataset.passwordToggle);
-    if (!(input instanceof HTMLInputElement)) return;
-    const isVisible = input.type === "text";
-    input.type = isVisible ? "password" : "text";
-    toggle.setAttribute("aria-pressed", String(!isVisible));
-    toggle.setAttribute("aria-label", isVisible ? "Show password" : "Hide password");
-    const icon = toggle.querySelector("i");
-    if (icon) icon.className = isVisible ? "bi bi-eye" : "bi bi-eye-slash";
+function startAdminRoleSwitcher() {
+  const switchers = document.querySelectorAll("[data-admin-role-switcher]");
+  if (!switchers.length || !firebaseConfigured) return;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    try {
+      const token = await user.getIdTokenResult();
+      if (token.claims.admin === true) {
+        switchers.forEach((switcher) => {
+          switcher.classList.remove("d-none");
+          switcher.classList.add("d-flex");
+        });
+      }
+    } catch (error) {
+      console.error(`Could not verify admin role-switch links: ${getErrorMessage(error)}`);
+    }
   });
-});
+}
+
+if (!firebaseConfigured) showFirebaseSetupNotice();
 
 document.querySelector("#registerForm")?.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -1170,6 +1211,7 @@ if (featuredContainer) loadListings(featuredContainer, true);
 loadRoomDetails();
 startLocationPicker();
 startAdminDashboard();
+startAdminRoleSwitcher();
 startOwnerDashboard();
 startProfileForm();
 startPaymentReturn();

@@ -29,8 +29,12 @@ function getListingFeePaisa(monthlyRentNpr) {
   return Math.round(monthlyRentNpr * LISTING_FEE_BPS / 100);
 }
 
-function requireOwner(request) {
+function requireSignedIn(request) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign in as a house owner first.");
+}
+
+function isAdmin(request) {
+  return request.auth?.token.admin === true;
 }
 
 function isApprovedProfile(profile) {
@@ -136,7 +140,7 @@ exports.createListingPayment = onCall({
   region: "asia-south1",
   secrets: [esewaSecret, khaltiSecret]
 }, async (request) => {
-  requireOwner(request);
+  requireSignedIn(request);
   const { listingId, provider } = request.data || {};
   if (typeof listingId !== "string" || !listingId
     || !["esewa", "khalti", "waived"].includes(provider)) {
@@ -158,10 +162,13 @@ exports.createListingPayment = onCall({
     || !/^9779\d{9}$/.test(listingSnapshot.data().ownerWhatsapp)) {
     throw new HttpsError("permission-denied", "This listing is not awaiting payment for your account.");
   }
-  if (!ownerSnapshot.exists || ownerSnapshot.data().role !== "owner" || ownerSnapshot.data().disabled) {
+  const admin = isAdmin(request);
+  if (!ownerSnapshot.exists
+    || (!admin && ownerSnapshot.data().role !== "owner")
+    || ownerSnapshot.data().disabled) {
     throw new HttpsError("permission-denied", "An active house-owner account is required.");
   }
-  if (!isApprovedProfile(ownerSnapshot.data())) {
+  if (!admin && !isApprovedProfile(ownerSnapshot.data())) {
     throw new HttpsError("permission-denied", "An administrator must approve your account first.");
   }
 
@@ -310,17 +317,18 @@ exports.verifyListingPayment = onCall({
   region: "asia-south1",
   secrets: [esewaSecret, khaltiSecret]
 }, async (request) => {
-  requireOwner(request);
+  requireSignedIn(request);
   const { paymentId } = request.data || {};
   if (typeof paymentId !== "string" || !paymentId) {
     throw new HttpsError("invalid-argument", "A payment ID is required.");
   }
   const firestore = getFirestore();
   const ownerProfile = await firestore.collection("users").doc(request.auth.uid).get();
+  const admin = isAdmin(request);
   if (!ownerProfile.exists
-    || ownerProfile.data().role !== "owner"
+    || (!admin && ownerProfile.data().role !== "owner")
     || ownerProfile.data().disabled
-    || !isApprovedProfile(ownerProfile.data())) {
+    || (!admin && !isApprovedProfile(ownerProfile.data()))) {
     throw new HttpsError("permission-denied", "An approved, active house-owner account is required.");
   }
   const paymentRef = firestore.collection("listingPayments").doc(paymentId);
