@@ -1318,6 +1318,28 @@ function startListingAccess() {
   });
 }
 
+function startOwnerListingLinks() {
+  const links = document.querySelectorAll("[data-owner-listing-link]");
+  if (!links.length || !firebaseConfigured) return;
+  onAuthStateChanged(auth, async (user) => {
+    links.forEach((link) => link.classList.add("d-none"));
+    if (!user) return;
+    try {
+      const profile = await getDoc(doc(db, "users", user.uid));
+      if (auth.currentUser?.uid !== user.uid
+        || !profile.exists()
+        || profile.data().role !== "owner"
+        || profile.data().disabled !== false
+        || profile.data().approvalStatus !== "approved") {
+        return;
+      }
+      links.forEach((link) => link.classList.remove("d-none"));
+    } catch (error) {
+      console.error(`Could not verify owner-only listing links: ${getErrorMessage(error)}`);
+    }
+  });
+}
+
 function startHomeAccountLink() {
   const accountLink = document.querySelector("[data-home-account-link]");
   if (!accountLink || !firebaseConfigured) return;
@@ -1416,6 +1438,7 @@ startLocationPicker();
 startAdminDashboard();
 startAdminRoleSwitcher();
 startListingAccess();
+startOwnerListingLinks();
 startHomeAccountLink();
 startOwnerDashboard();
 startTenantDashboard();
