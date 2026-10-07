@@ -1202,3 +1202,67 @@ document.querySelector("[data-listing-sort]")?.addEventListener("change", () => 
   applyListingFilters();
   updateFilterUrl();
 });
+
+// ImgBB Upload Helper Function
+async function uploadToImgBB(fileInput) {
+    const file = fileInput.files[0];
+    if (!file) return null;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const apiKey = "3e49d2680697f77a66a30651483e0f49"; // Your ImgBB API Key
+
+    try {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            return result.data.url; // Returns direct hosted image URL
+        } else {
+            console.error("ImgBB upload failed:", result);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error uploading image:", error);
+        return null;
+    }
+}
+
+const addRoomForm = document.getElementById("addRoomForm"); // Match your form's ID
+
+if (addRoomForm) {
+    addRoomForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const fileInput = document.getElementById("roomImageInput"); // Match your file input ID
+
+        // 1. Upload the image to ImgBB
+        const imageUrl = await uploadToImgBB(fileInput);
+
+        if (!imageUrl) {
+            alert("Image upload failed. Please select an image and try again.");
+            return;
+        }
+
+        // 2. Save room details with the ImgBB URL into Firestore
+        try {
+            await db.collection("rooms").add({
+                title: document.getElementById("roomTitle").value,
+                price: document.getElementById("roomPrice").value,
+                location: document.getElementById("roomLocation").value,
+                imageUrl: imageUrl, // Storing ImgBB URL in Firestore
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            alert("Room listed successfully!");
+            addRoomForm.reset();
+        } catch (error) {
+            console.error("Firestore error:", error);
+            alert("Failed to post room. Check console for details.");
+        }
+    });
+}
