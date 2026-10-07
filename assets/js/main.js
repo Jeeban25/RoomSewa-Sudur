@@ -249,7 +249,7 @@ async function loginAccount(form) {
         return;
       }
     }
-    window.location.assign(profileData.role === "owner" ? "landlord-dashboard.html" : "user-profile.html");
+    window.location.assign(profileData.role === "owner" ? "landlord-dashboard.html" : "tenant-dashboard.html");
   } catch (error) {
     showStatus(status, getSignInErrorMessage(error, isAdminUsername));
   } finally {
@@ -910,13 +910,30 @@ function startOwnerDashboard() {
       const profile = await getDoc(doc(db, "users", user.uid));
       const token = await user.getIdTokenResult();
       const admin = token.claims.admin === true;
-      if (!profile.exists()
-        || (!admin && profile.data().role !== "owner")
-        || (!admin && profile.data().approvalStatus !== "approved")) {
-        showStatus(status, "An approved house-owner account is required to open this dashboard.");
+      if (!profile.exists()) {
+        showStatus(status, "Your account profile could not be found. Contact support for help.");
         return;
       }
-      document.querySelector("[data-owner-name]").textContent = profile.data().name || user.email;
+      const profileData = profile.data();
+      if (!admin && profileData.disabled === true) {
+        showStatus(status, "This account is disabled. Contact the administrator for help.");
+        return;
+      }
+      if (!admin && profileData.approvalStatus !== "approved") {
+        showStatus(status, "Your account is waiting for administrator approval.");
+        return;
+      }
+      if (!admin && profileData.role !== "owner") {
+        if (profileData.role === "tenant") {
+          window.location.replace("tenant-dashboard.html");
+          return;
+        }
+        showStatus(status, profileData.role === "admin"
+          ? "This account needs the secure Firebase administrator role before it can open the admin dashboard."
+          : "An approved house-owner account is required to open this dashboard.");
+        return;
+      }
+      document.querySelector("[data-owner-name]").textContent = profileData.name || user.email;
       if (admin) {
         document.querySelectorAll("[data-owner-admin-link]").forEach((link) => {
           link.classList.remove("d-none");
@@ -936,6 +953,68 @@ function startOwnerDashboard() {
     }
   });
   document.querySelector("[data-owner-signout]").addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      window.location.replace("login.html");
+    } catch (error) {
+      showStatus(status, `Could not sign out: ${getErrorMessage(error)}`);
+    }
+  });
+}
+
+function startTenantDashboard() {
+  const dashboard = document.querySelector("[data-tenant-dashboard]");
+  if (!dashboard) return;
+  const status = document.querySelector("[data-tenant-status]");
+  if (!firebaseConfigured) {
+    showFirebaseSetupNotice();
+    showStatus(status, "Configure Firebase before opening your dashboard.", "warning");
+    return;
+  }
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.replace("login.html");
+      return;
+    }
+    try {
+      const [profile, token] = await Promise.all([
+        getDoc(doc(db, "users", user.uid)),
+        user.getIdTokenResult()
+      ]);
+      const admin = token.claims.admin === true;
+      if (!profile.exists()) {
+        showStatus(status, "Your account profile could not be found. Contact support for help.");
+        return;
+      }
+      const profileData = profile.data();
+      if (!admin && profileData.disabled === true) {
+        showStatus(status, "This account is disabled. Contact the administrator for help.");
+        return;
+      }
+      if (!admin && profileData.approvalStatus !== "approved") {
+        showStatus(status, "Your account is waiting for administrator approval.");
+        return;
+      }
+      if (!admin && profileData.role !== "tenant") {
+        if (profileData.role === "owner") {
+          window.location.replace("landlord-dashboard.html");
+          return;
+        }
+        showStatus(status, profileData.role === "admin"
+          ? "This account needs the secure Firebase administrator role before it can open the admin dashboard."
+          : "A tenant account is required to open this dashboard.");
+        return;
+      }
+      document.querySelector("[data-tenant-name]").textContent = profileData.name || user.email || "Tenant";
+      document.querySelectorAll("[data-tenant-admin-link]").forEach((link) => {
+        link.classList.toggle("d-none", !admin);
+      });
+      status.classList.add("d-none");
+    } catch (error) {
+      showStatus(status, `Could not load your dashboard: ${getErrorMessage(error)}`);
+    }
+  });
+  document.querySelector("[data-tenant-signout]").addEventListener("click", async () => {
     try {
       await signOut(auth);
       window.location.replace("login.html");
@@ -1072,8 +1151,21 @@ function startProfileForm() {
       const profile = await getDoc(doc(db, "users", user.uid));
       if (!profile.exists()) throw new Error("The account profile could not be found.");
       const profileData = profile.data();
-      if (profileData.role === "owner" || (await user.getIdTokenResult()).claims.admin === true) {
+      const admin = (await user.getIdTokenResult()).claims.admin === true;
+      const dashboardLink = document.querySelector("[data-profile-dashboard]");
+      if (admin) {
+        dashboardLink.href = "admin-dashboard.html";
+        document.querySelector("[data-profile-dashboard-label]").textContent = "Admin dashboard";
+        dashboardLink.classList.remove("d-none");
+      } else if (profileData.role === "owner") {
+        dashboardLink.href = "landlord-dashboard.html";
+        document.querySelector("[data-profile-dashboard-label]").textContent = "Owner dashboard";
+        dashboardLink.classList.remove("d-none");
         document.querySelector("[data-profile-owner-only]")?.classList.remove("d-none");
+      } else if (profileData.role === "tenant") {
+        dashboardLink.href = "tenant-dashboard.html";
+        document.querySelector("[data-profile-dashboard-label]").textContent = "Tenant dashboard";
+        dashboardLink.classList.remove("d-none");
       }
       form.querySelector('[name="name"]').value = profileData.name || "";
       form.querySelector('[name="phone"]').value = profileData.phone || "";
@@ -1234,6 +1326,7 @@ startLocationPicker();
 startAdminDashboard();
 startAdminRoleSwitcher();
 startOwnerDashboard();
+startTenantDashboard();
 startProfileForm();
 startPaymentReturn();
 restoreListingFiltersFromUrl();

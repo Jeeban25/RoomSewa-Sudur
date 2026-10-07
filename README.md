@@ -29,7 +29,7 @@ RoomSewa-Sudur is focused exclusively on student room rentals in Mahendranagar.
 
    The bootstrap script refuses to grant admin when another admin claim already exists. It assigns the Firebase Authentication admin claim and marks the matching Firestore profile approved. The administrator must sign out and sign back in after the claim is assigned.
 
-   The admin account keeps its trusted admin claim while using the Admin, Owner, and Tenant modes. Use the mode links on the dashboards to switch views. Owner mode uses the normal listing fee and eSewa/Khalti payment verification flow; admin privileges do not waive listing fees.
+   The admin account keeps its trusted admin claim while using the Admin, Owner, and Tenant modes. Use the mode links on the dashboards to switch views. Approved owners land on the Owner Dashboard, approved tenants land on the Tenant Dashboard, and admins with the trusted claim land on the Admin Dashboard. Owner mode uses the normal listing fee and eSewa/Khalti payment verification flow; admin privileges do not waive listing fees.
 
 House owners can create Mahendranagar listings with photos, a WhatsApp contact number, and map coordinates. Monthly rent can be any whole NPR amount from 0 to 100,000; the listing fee is 1.25% of that rent. Fees below NPR 10.01 are waived because the online gateways will not process them. For higher fees, owners pay through eSewa or Khalti. A listing becomes reviewable only after a Cloud Function verifies the transaction directly with the selected provider, or records an allowed fee waiver; browser redirects are not treated as proof of payment. Admins can approve only paid or waived listings.
 
