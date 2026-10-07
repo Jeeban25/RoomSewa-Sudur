@@ -1343,9 +1343,10 @@ function startOwnerListingLinks() {
 function startHomeAccountLink() {
   const accountLink = document.querySelector("[data-home-account-link]");
   if (!accountLink || !firebaseConfigured) return;
+  const pagePrefix = window.location.pathname.includes("/pages/") ? "" : "pages/";
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      accountLink.href = "pages/login.html";
+      accountLink.href = `${pagePrefix}login.html`;
       accountLink.textContent = "Sign In";
       return;
     }
@@ -1354,17 +1355,18 @@ function startHomeAccountLink() {
         getDoc(doc(db, "users", user.uid)),
         user.getIdTokenResult()
       ]);
+      if (auth.currentUser?.uid !== user.uid) return;
       if (token.claims.admin === true) {
-        accountLink.href = "pages/admin-dashboard.html";
+        accountLink.href = `${pagePrefix}admin-dashboard.html`;
         accountLink.textContent = "Admin Dashboard";
       } else if (profile.exists() && profile.data().role === "owner") {
-        accountLink.href = "pages/landlord-dashboard.html";
+        accountLink.href = `${pagePrefix}landlord-dashboard.html`;
         accountLink.textContent = "Owner Dashboard";
       } else if (profile.exists() && profile.data().role === "tenant") {
-        accountLink.href = "pages/tenant-dashboard.html";
+        accountLink.href = `${pagePrefix}tenant-dashboard.html`;
         accountLink.textContent = "Tenant Dashboard";
       } else {
-        accountLink.href = "pages/user-profile.html";
+        accountLink.href = `${pagePrefix}user-profile.html`;
         accountLink.textContent = "My Profile";
       }
     } catch (error) {
