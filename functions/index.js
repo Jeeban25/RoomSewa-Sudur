@@ -162,14 +162,11 @@ exports.createListingPayment = onCall({
     || !/^9779\d{9}$/.test(listingSnapshot.data().ownerWhatsapp)) {
     throw new HttpsError("permission-denied", "This listing is not awaiting payment for your account.");
   }
-  const admin = isAdmin(request);
   if (!ownerSnapshot.exists
-    || (!admin && ownerSnapshot.data().role !== "owner")
-    || ownerSnapshot.data().disabled) {
+    || ownerSnapshot.data().role !== "owner"
+    || ownerSnapshot.data().disabled !== false
+    || !isApprovedProfile(ownerSnapshot.data())) {
     throw new HttpsError("permission-denied", "An active house-owner account is required.");
-  }
-  if (!admin && !isApprovedProfile(ownerSnapshot.data())) {
-    throw new HttpsError("permission-denied", "An administrator must approve your account first.");
   }
 
   const rent = listingSnapshot.data().rent;
@@ -324,11 +321,10 @@ exports.verifyListingPayment = onCall({
   }
   const firestore = getFirestore();
   const ownerProfile = await firestore.collection("users").doc(request.auth.uid).get();
-  const admin = isAdmin(request);
   if (!ownerProfile.exists
-    || (!admin && ownerProfile.data().role !== "owner")
-    || ownerProfile.data().disabled
-    || (!admin && !isApprovedProfile(ownerProfile.data()))) {
+    || ownerProfile.data().role !== "owner"
+    || ownerProfile.data().disabled !== false
+    || !isApprovedProfile(ownerProfile.data())) {
     throw new HttpsError("permission-denied", "An approved, active house-owner account is required.");
   }
   const paymentRef = firestore.collection("listingPayments").doc(paymentId);

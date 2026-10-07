@@ -43,6 +43,18 @@ function showStatus(element, message, type = "danger") {
   element.textContent = message;
 }
 
+function showListingAccessMessage(element, message, links = []) {
+  if (!element) return;
+  element.className = "alert alert-warning";
+  element.replaceChildren(document.createTextNode(message));
+  links.forEach(({ href, label }) => {
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = label;
+    element.append(document.createTextNode(" "), link);
+  });
+}
+
 function showFirebaseSetupNotice() {
   document.querySelectorAll("[data-firebase-setup]").forEach((element) => {
     element.textContent = "Firebase is not configured yet. Add your Firebase web app settings in assets/js/firebase-config.js, then reload this page.";
@@ -244,7 +256,8 @@ async function loginAccount(form) {
     if (returnTo) {
       const destination = new URL(returnTo, window.location.origin);
       if (destination.origin === window.location.origin
-        && destination.pathname.endsWith("/pages/payment-return.html")) {
+        && (destination.pathname.endsWith("/pages/payment-return.html")
+          || destination.pathname.endsWith("/pages/post-a-room.html"))) {
         window.location.assign(destination.toString());
         return;
       }
@@ -566,12 +579,11 @@ async function submitListing(form) {
   let listingId;
   try {
     const profile = await getDoc(doc(db, "users", auth.currentUser.uid));
-    const token = await auth.currentUser.getIdTokenResult();
-    const admin = token.claims.admin === true;
     if (!profile.exists()
-      || (!admin && profile.data().role !== "owner")
-      || (!admin && profile.data().approvalStatus !== "approved")) {
-      throw new Error("Only registered room owners can post a listing.");
+      || profile.data().role !== "owner"
+      || profile.data().disabled !== false
+      || profile.data().approvalStatus !== "approved") {
+      throw new Error("Only approved, active house-owner accounts can post a listing.");
     }
     const listingRef = doc(collection(db, "listings"));
     listingId = listingRef.id;
@@ -1261,6 +1273,84 @@ function startAdminRoleSwitcher() {
   });
 }
 
+function startListingAccess() {
+  const form = document.querySelector("[data-payment-form]");
+  if (!form) return;
+  const status = document.querySelector("[data-listing-access-status]");
+  form.hidden = true;
+  if (!firebaseConfigured) {
+    showFirebaseSetupNotice();
+    showStatus(status, "Configure Firebase before posting a room.", "warning");
+    return;
+  }
+  onAuthStateChanged(auth, async (user) => {
+    form.hidden = true;
+    if (!user) {
+      const returnTo = encodeURIComponent(window.location.href);
+      showListingAccessMessage(status, "Sign in with an approved house-owner account to list a room.", [
+        { href: `login.html?returnTo=${returnTo}`, label: "Sign in" },
+        { href: "register.html", label: "create a house-owner account" }
+      ]);
+      return;
+    }
+    try {
+      const profile = await getDoc(doc(db, "users", user.uid));
+      if (auth.currentUser?.uid !== user.uid) return;
+      if (!profile.exists() || profile.data().role !== "owner") {
+        showListingAccessMessage(status, "This page is for house owners only.", [
+          { href: "register.html", label: "Create a house-owner account" }
+        ]);
+        return;
+      }
+      if (profile.data().disabled !== false) {
+        showStatus(status, "This house-owner account is disabled. Contact the administrator for help.", "warning");
+        return;
+      }
+      if (profile.data().approvalStatus !== "approved") {
+        showStatus(status, "Your house-owner account must be approved by an administrator before you can list a room.", "warning");
+        return;
+      }
+      status.classList.add("d-none");
+      form.hidden = false;
+    } catch (error) {
+      showStatus(status, `Could not verify house-owner access: ${getErrorMessage(error)}`);
+    }
+  });
+}
+
+function startHomeAccountLink() {
+  const accountLink = document.querySelector("[data-home-account-link]");
+  if (!accountLink || !firebaseConfigured) return;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      accountLink.href = "pages/login.html";
+      accountLink.textContent = "Sign In";
+      return;
+    }
+    try {
+      const [profile, token] = await Promise.all([
+        getDoc(doc(db, "users", user.uid)),
+        user.getIdTokenResult()
+      ]);
+      if (token.claims.admin === true) {
+        accountLink.href = "pages/admin-dashboard.html";
+        accountLink.textContent = "Admin Dashboard";
+      } else if (profile.exists() && profile.data().role === "owner") {
+        accountLink.href = "pages/landlord-dashboard.html";
+        accountLink.textContent = "Owner Dashboard";
+      } else if (profile.exists() && profile.data().role === "tenant") {
+        accountLink.href = "pages/tenant-dashboard.html";
+        accountLink.textContent = "Tenant Dashboard";
+      } else {
+        accountLink.href = "pages/user-profile.html";
+        accountLink.textContent = "My Profile";
+      }
+    } catch (error) {
+      console.error(`Could not load the home account link: ${getErrorMessage(error)}`);
+    }
+  });
+}
+
 if (!firebaseConfigured) showFirebaseSetupNotice();
 
 document.querySelector("#registerForm")?.addEventListener("submit", (event) => {
@@ -1325,6 +1415,8 @@ loadRoomDetails();
 startLocationPicker();
 startAdminDashboard();
 startAdminRoleSwitcher();
+startListingAccess();
+startHomeAccountLink();
 startOwnerDashboard();
 startTenantDashboard();
 startProfileForm();

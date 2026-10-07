@@ -17,9 +17,8 @@ service cloud.firestore {
     }
 
     function isOwner() {
-      return isAdmin()
-        || (isActiveUser()
-          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "owner");
+      return isActiveUser()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "owner";
     }
 
     function isWithinMahendranagar(data) {

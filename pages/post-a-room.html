@@ -42,13 +42,14 @@
     <p class="text-muted mb-4">Share your home with students. The one-time listing fee is 1.25% of one month’s rent. Fees below NPR 10.01 are waived; larger fees are paid through eSewa or Khalti.</p>
 
     <div class="alert alert-warning d-none" role="alert" data-firebase-setup></div>
+    <div class="alert d-none" role="status" data-listing-access-status aria-live="polite"></div>
     <div class="alert d-none" role="status" data-form-status></div>
     <div class="d-flex flex-wrap gap-3 mb-4">
       <div class="listing-step"><span class="listing-step-number">1</span> Room details</div>
       <div class="listing-step"><span class="listing-step-number">2</span> Photos & location</div>
       <div class="listing-step"><span class="listing-step-number">3</span> Payment or fee waiver</div>
     </div>
-    <form id="listingForm" class="card border-0 shadow-sm p-4 p-md-5 bg-white" data-payment-form>
+    <form id="listingForm" class="card border-0 shadow-sm p-4 p-md-5 bg-white" data-payment-form hidden>
       
       <!-- Section 1 -->
       <h5 class="fw-bold text-primary mb-3">1. Basic Information</h5>
@@ -169,12 +170,5 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="../assets/js/main.js"></script>
-
-  <!-- Firebase & Config -->
-<script src="../assets/js/firebase-config.js"></script>
-<script src="../assets/js/firebase-client.js"></script>
-
-<!-- Main JS containing ImgBB upload and form submit logic -->
-<script src="../assets/js/main.js"></script>
 </body>
 </html>
