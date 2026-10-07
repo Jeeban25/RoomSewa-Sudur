@@ -21,15 +21,9 @@ import {
   updateDoc,
   where
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import {
-  deleteObject,
-  getDownloadURL,
-  ref,
-  uploadBytes
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-functions.js";
 import { adminEmail, adminUsername } from "./firebase-config.js";
-import { auth, db, firebaseConfigured, functions, storage } from "./firebase-client.js";
+import { auth, db, firebaseConfigured, functions } from "./firebase-client.js";
 import { filterListings } from "./listing-filters.js";
 
 const city = "Mahendranagar";
@@ -93,6 +87,25 @@ function getSignInErrorMessage(error, isAdminUsername) {
 function busy(form, state) {
   const submitButton = form.querySelector('[type="submit"]');
   if (submitButton) submitButton.disabled = state;
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const dataUrl = String(reader.result || "");
+      const separator = dataUrl.indexOf(",");
+      if (separator < 0) {
+        reject(new Error("Could not read the selected photo."));
+        return;
+      }
+      resolve(dataUrl.slice(separator + 1));
+    }, { once: true });
+    reader.addEventListener("error", () => {
+      reject(reader.error || new Error("Could not read the selected photo."));
+    }, { once: true });
+    reader.readAsDataURL(file);
+  });
 }
 
 function getListingFeePaisa(rent) {
@@ -546,8 +559,9 @@ async function submitListing(form) {
     showStatus(status, "Upload no more than eight photos.");
     return;
   }
-  if (files.some((file) => !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024)) {
-    showStatus(status, "Every file must be an image no larger than 5MB.");
+  if (files.some((file) => !["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type)
+    || file.size > 5 * 1024 * 1024)) {
+    showStatus(status, "Every photo must be a JPEG, PNG, GIF, or WebP image no larger than 5MB.");
     return;
   }
   if (!auth.currentUser) {
@@ -573,11 +587,11 @@ async function submitListing(form) {
   }
 
   busy(form, true);
-  const uploadedImageRefs = [];
   let listingCreated = false;
   let imagesReady = false;
   let listingSubmitted = false;
   let listingId;
+  const uploadedImages = [];
   let saveStage = "checking your approved owner profile";
   try {
     const profile = await getDoc(doc(db, "users", auth.currentUser.uid));
@@ -613,11 +627,17 @@ async function submitListing(form) {
     const imageUrls = [];
     for (const [index, file] of files.entries()) {
       saveStage = `uploading photo ${index + 1} of ${files.length}`;
-      const extension = file.name.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "") || "jpg";
-      const imageRef = ref(storage, `listings/${auth.currentUser.uid}/${listingRef.id}/${index}.${extension}`);
-      await uploadBytes(imageRef, file, { contentType: file.type });
-      uploadedImageRefs.push(imageRef);
-      imageUrls.push(await getDownloadURL(imageRef));
+      const imageBase64 = await readFileAsBase64(file);
+      const upload = httpsCallable(functions, "uploadListingImage");
+      const result = await upload({
+        listingId: listingRef.id,
+        imageIndex: index,
+        imageBase64,
+        contentType: file.type,
+        fileName: file.name
+      });
+      imageUrls.push(result.data.imageUrl);
+      uploadedImages.push({ imageIndex: index, deleteUrl: result.data.deleteUrl });
     }
     saveStage = "saving photo links to the room draft";
     await updateDoc(listingRef, { imageUrls });
@@ -634,17 +654,25 @@ async function submitListing(form) {
     if (listingCreated && imagesReady) {
       showStatus(status, `Your draft is saved. Payment could not start: ${getErrorMessage(error)}. Open the House Owner Dashboard to retry payment.`);
     } else {
-      const cleanupResults = await Promise.allSettled([
-        ...uploadedImageRefs.map(deleteObject),
-        ...(listingCreated ? [deleteDoc(doc(db, "listings", listingId))] : [])
-      ]);
+      const deleteListingImage = httpsCallable(functions, "deleteListingImage");
+      const cleanupResults = await Promise.allSettled(uploadedImages.map(({ imageIndex, deleteUrl }) =>
+        deleteListingImage({ listingId, imageIndex, deleteUrl })
+      ));
       const cleanupFailures = cleanupResults.filter((result) => result.status === "rejected").length;
       const cleanupNote = cleanupFailures
-        ? ` Cleanup also failed for ${cleanupFailures} uploaded file(s).`
+        ? ` Cleanup also failed for ${cleanupFailures} ImgBB photo(s).`
         : "";
+      if (listingCreated) {
+        try {
+          await deleteDoc(doc(db, "listings", listingId));
+        } catch (cleanupError) {
+          showStatus(status, `Could not save your room: ${getErrorMessage(error)}. Could not remove the incomplete draft: ${getErrorMessage(cleanupError)}.${cleanupNote}`);
+          return;
+        }
+      }
       const errorMessage = getErrorMessage(error);
       const permissionHelp = error?.code === "permission-denied"
-        ? ` Firebase denied permission while ${saveStage}. Verify the deployed Firestore and Storage rules, and confirm your owner profile is approved and active (role "owner", approvalStatus "approved", disabled false).`
+        ? ` Firebase denied permission while ${saveStage}. For draft creation or photo-link saving, deploy the Firestore rules with "firebase deploy --only firestore:rules --project roomsewa-sudur-2ed5c". For ImgBB upload authorization, deploy Functions with "firebase deploy --only functions --project roomsewa-sudur-2ed5c". Confirm your owner profile has role "owner", approvalStatus "approved", and disabled false.`
         : "";
       showStatus(status, `Could not save your room: ${errorMessage}${errorMessage.endsWith(".") ? "" : "."}${permissionHelp}${cleanupNote}`);
     }

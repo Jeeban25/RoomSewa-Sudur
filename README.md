@@ -4,7 +4,7 @@ RoomSewa-Sudur is focused exclusively on student room rentals in Mahendranagar.
 
 ## Firebase setup
 
-1. Create a Firebase project and register a Web app. Enable Email/Password in Authentication, create a Firestore database, and enable Storage.
+1. Create a Firebase project and register a Web app. Enable Email/Password in Authentication and create a Firestore database. Keep Firebase Storage enabled if you have legacy listing photos stored there; new listing photos use ImgBB.
 2. Copy the Web app values into `assets/js/firebase-config.js`. Set `adminEmail` to the email address of the administrator's Firebase Authentication account. The public admin username `jeeban` is mapped to that email; the password is never stored in this repository.
 3. In Firebase Authentication, create the admin user with a strong password. Do not use `1234`: it is not a secure password. Tenant and house-owner accounts can be requested through registration, but require administrator approval before they can sign in and use the app.
    Existing tenant and house-owner accounts also require approval after the updated rules are deployed; approve them from the Admin Dashboard.
@@ -19,7 +19,8 @@ RoomSewa-Sudur is focused exclusively on student room rentals in Mahendranagar.
    firebase deploy
    ```
 
-   Cloud Functions and Firebase Storage may require the Firebase project to be on the Blaze plan.
+   Cloud Functions may require the Firebase project to be on the Blaze plan.
+   If creating a listing draft fails with a Firebase permission error after deploying only the website, deploy the current Firestore rules from this directory with `firebase deploy --only firestore:rules --project YOUR_PROJECT_ID`.
 5. Assign the only admin claim using trusted Application Default Credentials from an authorized administrator environment. For local setup, authenticate with `gcloud auth application-default login`, or point `GOOGLE_APPLICATION_CREDENTIALS` at a service-account file kept outside this repository:
 
    ```sh
@@ -41,7 +42,11 @@ House owners can create Mahendranagar listings with photos, a WhatsApp contact n
    ```sh
    firebase functions:secrets:set ESEWA_SECRET_KEY
    firebase functions:secrets:set KHALTI_SECRET_KEY
+   firebase functions:secrets:set IMGBB_API_KEY
    ```
+
+   Listing-photo uploads go through the authenticated `uploadListingImage` Cloud Function. Keep the ImgBB API key in the `IMGBB_API_KEY` Functions secret; never put it in frontend JavaScript. Owners need the current Firestore create/update rules deployed before the draft can be created and photos uploaded.
+   After setting the secret, deploy the callable and Firestore rules with `firebase deploy --only functions,firestore:rules --project YOUR_PROJECT_ID`.
 
 3. Create `functions/.env.YOUR_PROJECT_ID` (this file is git-ignored) with the merchant product code, provider environment, and deployed site origin:
 

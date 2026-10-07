@@ -11,6 +11,7 @@ initializeApp();
 const esewaSecret = defineSecret("ESEWA_SECRET_KEY");
 const esewaProductCode = defineString("ESEWA_PRODUCT_CODE");
 const esewaEnvironment = defineString("ESEWA_ENVIRONMENT", { default: "uat" });
+const imgbbApiKey = defineSecret("IMGBB_API_KEY");
 const khaltiSecret = defineSecret("KHALTI_SECRET_KEY");
 const publicSiteUrl = defineString("PUBLIC_SITE_URL");
 const LISTING_FEE_BPS = 125;
@@ -39,6 +40,238 @@ function isAdmin(request) {
 
 function isApprovedProfile(profile) {
   return profile.approvalStatus === "approved";
+}
+
+function isValidImageBuffer(buffer, contentType) {
+  if (contentType === "image/jpeg") {
+    return buffer.length >= 3
+      && buffer[0] === 0xff
+      && buffer[1] === 0xd8
+      && buffer[2] === 0xff;
+  }
+  if (contentType === "image/png") {
+    return buffer.length >= 8
+      && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  if (contentType === "image/gif") {
+    const signature = buffer.subarray(0, 6).toString("ascii");
+    return signature === "GIF87a" || signature === "GIF89a";
+  }
+  if (contentType === "image/webp") {
+    return buffer.length >= 12
+      && buffer.subarray(0, 4).toString("ascii") === "RIFF"
+      && buffer.subarray(8, 12).toString("ascii") === "WEBP";
+  }
+  return false;
+}
+
+async function requireApprovedOwner(uid) {
+  const profile = await getFirestore().collection("users").doc(uid).get();
+  if (!profile.exists
+    || profile.data().role !== "owner"
+    || profile.data().disabled !== false
+    || !isApprovedProfile(profile.data())) {
+    throw new HttpsError("permission-denied", "An approved, active house-owner account is required.");
+  }
+}
+
+function getImgbbDeleteUrl(value) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new HttpsError("invalid-argument", "The ImgBB deletion reference is invalid.");
+  }
+  const parts = url.pathname.split("/").filter(Boolean);
+  if (url.protocol !== "https:"
+    || url.hostname !== "ibb.co"
+    || url.port
+    || url.username
+    || url.password
+    || url.search
+    || url.hash
+    || parts.length !== 2
+    || !/^[a-zA-Z0-9]+$/.test(parts[0])
+    || !/^[a-fA-F0-9]{32}$/.test(parts[1])) {
+    throw new HttpsError("invalid-argument", "The ImgBB deletion reference is invalid.");
+  }
+  return url;
+}
+
+async function removeImgBBImage(deleteUrl) {
+  const url = getImgbbDeleteUrl(deleteUrl);
+  let response;
+  try {
+    response = await fetch(url, {
+      signal: AbortSignal.timeout(15000),
+      redirect: "error"
+    });
+  } catch {
+    throw new HttpsError("unavailable", "Could not remove the ImgBB photo.");
+  }
+  if (!response.ok) {
+    throw new HttpsError("unavailable", `ImgBB could not remove the photo (${response.status}).`);
+  }
+}
+
+exports.uploadListingImage = onCall({
+  region: "asia-south1",
+  secrets: [imgbbApiKey]
+}, async (request) => {
+  requireSignedIn(request);
+  const { listingId, imageBase64, contentType, fileName, imageIndex } = request.data || {};
+  if (typeof listingId !== "string" || !listingId
+    || typeof imageBase64 !== "string"
+    || typeof contentType !== "string"
+    || typeof fileName !== "string"
+    || fileName.length > 255
+    || !Number.isInteger(imageIndex)
+    || imageIndex < 0
+    || imageIndex > 7) {
+    throw new HttpsError("invalid-argument", "A listing, image, and filename are required.");
+  }
+  if (imageBase64.length > 7_000_000
+    || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(imageBase64)) {
+    throw new HttpsError("invalid-argument", "The image data is invalid or exceeds the 5MB upload limit.");
+  }
+  const image = Buffer.from(imageBase64, "base64");
+  if (image.length === 0 || image.length > 5 * 1024 * 1024 || !isValidImageBuffer(image, contentType)) {
+    throw new HttpsError("invalid-argument", "Upload a valid JPEG, PNG, GIF, or WebP image up to 5MB.");
+  }
+  await requireApprovedOwner(request.auth.uid);
+  const firestore = getFirestore();
+  const listingRef = firestore.collection("listings").doc(listingId);
+  const slotRef = listingRef.collection("imageUploads").doc(String(imageIndex));
+  const existingUpload = await firestore.runTransaction(async (transaction) => {
+    const [listing, slot] = await Promise.all([
+      transaction.get(listingRef),
+      transaction.get(slotRef)
+    ]);
+    if (!listing.exists
+      || listing.data().ownerUid !== request.auth.uid
+      || listing.data().status !== "awaiting_payment"
+      || listing.data().paymentStatus !== "awaiting_payment"
+      || listing.data().location !== "Mahendranagar"
+      || !Array.isArray(listing.data().imageUrls)
+      || listing.data().imageUrls.length !== 0) {
+      throw new HttpsError("permission-denied", "This room draft is not available for photo upload.");
+    }
+    if (slot.exists) {
+      const savedUpload = slot.data();
+      if (savedUpload.status === "uploaded"
+        && typeof savedUpload.imageUrl === "string"
+        && typeof savedUpload.deleteUrl === "string") {
+        return savedUpload;
+      }
+      throw new HttpsError("already-exists", "This photo upload is already in progress.");
+    }
+    transaction.create(slotRef, { status: "uploading", createdAt: new Date() });
+    return null;
+  });
+  if (existingUpload) {
+    return { imageUrl: existingUpload.imageUrl, deleteUrl: existingUpload.deleteUrl };
+  }
+
+  const apiKey = imgbbApiKey.value();
+  if (!apiKey) {
+    await slotRef.delete();
+    throw new HttpsError("failed-precondition", "Set the IMGBB_API_KEY Functions secret.");
+  }
+  const payload = new FormData();
+  payload.append("image", imageBase64);
+  payload.append("name", fileName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120));
+  let response;
+  try {
+    const uploadUrl = new URL("https://api.imgbb.com/1/upload");
+    uploadUrl.searchParams.set("key", apiKey);
+    response = await fetch(uploadUrl, {
+      method: "POST",
+      body: payload,
+      signal: AbortSignal.timeout(20000)
+    });
+  } catch {
+    await slotRef.delete();
+    throw new HttpsError("unavailable", "Could not connect to ImgBB. Check the connection and retry.");
+  }
+  const result = await response.json().catch(() => ({}));
+  const imageUrl = result?.data?.url;
+  const deleteUrl = result?.data?.delete_url;
+  if (!response.ok
+    || result.success !== true
+    || typeof imageUrl !== "string"
+    || typeof deleteUrl !== "string") {
+    await slotRef.delete();
+    throw new HttpsError("unavailable", `ImgBB rejected the photo upload (${response.status}).`);
+  }
+  let parsedImageUrl;
+  try {
+    parsedImageUrl = new URL(imageUrl);
+  } catch {
+    await slotRef.delete();
+    throw new HttpsError("unavailable", "ImgBB returned an invalid image URL.");
+  }
+  if (parsedImageUrl.protocol !== "https:" || parsedImageUrl.hostname !== "i.ibb.co") {
+    await slotRef.delete();
+    throw new HttpsError("unavailable", "ImgBB returned an untrusted image URL.");
+  }
+  try {
+    getImgbbDeleteUrl(deleteUrl);
+  } catch (error) {
+    await slotRef.delete();
+    throw error;
+  }
+  try {
+    await slotRef.set({ imageUrl, deleteUrl, status: "uploaded", uploadedAt: new Date() });
+  } catch {
+    await removeImgBBImage(deleteUrl);
+    await slotRef.delete();
+    throw new HttpsError("internal", "The ImgBB photo uploaded, but its cleanup record could not be saved.");
+  }
+  return { imageUrl, deleteUrl };
+});
+
+exports.deleteListingImage = onCall({
+  region: "asia-south1"
+}, async (request) => {
+  requireSignedIn(request);
+  const { listingId, deleteUrl, imageIndex } = request.data || {};
+  if (typeof listingId !== "string" || !listingId
+    || typeof deleteUrl !== "string"
+    || !Number.isInteger(imageIndex)
+    || imageIndex < 0
+    || imageIndex > 7) {
+    throw new HttpsError("invalid-argument", "A listing, photo index, and ImgBB deletion reference are required.");
+  }
+  await requireApprovedOwner(request.auth.uid);
+  const listingRef = getFirestore().collection("listings").doc(listingId);
+  const [listing, slot] = await Promise.all([
+    listingRef.get(),
+    listingRef.collection("imageUploads").doc(String(imageIndex)).get()
+  ]);
+  if (!listing.exists
+    || listing.data().ownerUid !== request.auth.uid
+    || listing.data().status !== "awaiting_payment"
+    || listing.data().paymentStatus !== "awaiting_payment"
+    || !slot.exists
+    || slot.data().deleteUrl !== deleteUrl) {
+    throw new HttpsError("permission-denied", "This room draft is not available for photo cleanup.");
+  }
+  await removeImgBBImage(deleteUrl);
+  await slot.ref.delete();
+  return { deleted: true };
+});
+
+async function deleteStoredImgBBImages(listingRef) {
+  const uploads = await listingRef.collection("imageUploads").get();
+  for (const upload of uploads.docs) {
+    const deleteUrl = upload.data().deleteUrl;
+    if (typeof deleteUrl === "string") await removeImgBBImage(deleteUrl);
+  }
+  if (!uploads.empty) {
+    const batch = getFirestore().batch();
+    uploads.docs.forEach((upload) => batch.delete(upload.ref));
+    await batch.commit();
+  }
 }
 
 function getReturnUrl(paymentId) {
@@ -471,6 +704,7 @@ exports.deleteAccount = onCall({ region: "asia-south1" }, async (request) => {
     const firestore = getFirestore();
     const ownedListings = await firestore.collection("listings").where("ownerUid", "==", uid).get();
     for (const listing of ownedListings.docs) {
+      await deleteStoredImgBBImages(listing.ref);
       await getStorage().bucket().deleteFiles({
         prefix: `listings/${uid}/${listing.id}/`
       });
@@ -502,6 +736,7 @@ exports.deleteListing = onCall({ region: "asia-south1" }, async (request) => {
     const listing = await listingRef.get();
     if (!listing.exists) return { listingId };
     const ownerUid = listing.data().ownerUid;
+    await deleteStoredImgBBImages(listingRef);
     if (typeof ownerUid === "string" && ownerUid) {
       await getStorage().bucket().deleteFiles({
         prefix: `listings/${ownerUid}/${listingId}/`
