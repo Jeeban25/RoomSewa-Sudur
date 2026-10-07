@@ -36,6 +36,7 @@ const city = "Mahendranagar";
 const cityCenter = [28.9639, 80.1778];
 let availableListings = [];
 let locationMarker;
+let listingMap;
 
 function showStatus(element, message, type = "danger") {
   if (!element) return;
@@ -716,27 +717,36 @@ async function loadRoomDetails() {
 
 function startLocationPicker() {
   const mapElement = document.getElementById("listingMap");
-  if (!mapElement || !window.L) return;
+  if (!mapElement || listingMap) return;
+  const status = document.querySelector("[data-form-status]");
+  if (!window.L) {
+    showStatus(status, "The location map could not load. Check your internet connection and reload this page.");
+    return;
+  }
   const latitude = document.getElementById("listingLatitude");
   const longitude = document.getElementById("listingLongitude");
   const markerPosition = [...cityCenter];
   latitude.value = markerPosition[0];
   longitude.value = markerPosition[1];
-  const map = window.L.map(mapElement).setView(markerPosition, 14);
-  map.setMaxBounds([[28.8, 80.0], [29.1, 80.35]]);
-  window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  listingMap = window.L.map(mapElement).setView(markerPosition, 14);
+  listingMap.setMaxBounds([[28.8, 80.0], [29.1, 80.35]]);
+  const tiles = window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-  locationMarker = window.L.marker(markerPosition, { draggable: true }).addTo(map);
+  }).addTo(listingMap);
+  tiles.once("tileerror", () => {
+    showStatus(status, "Map tiles could not load. Check your internet connection; you can still select the room location by dragging the marker.", "warning");
+  });
+  locationMarker = window.L.marker(markerPosition, { draggable: true }).addTo(listingMap);
   const updateLocation = (position) => {
     latitude.value = position.lat;
     longitude.value = position.lng;
   };
-  map.on("click", (event) => {
+  listingMap.on("click", (event) => {
     locationMarker.setLatLng(event.latlng);
     updateLocation(event.latlng);
   });
   locationMarker.on("dragend", (event) => updateLocation(event.target.getLatLng()));
+  window.requestAnimationFrame(() => listingMap.invalidateSize());
 }
 
 function element(tag, text) {
@@ -1312,6 +1322,10 @@ function startListingAccess() {
       }
       status.classList.add("d-none");
       form.hidden = false;
+      window.requestAnimationFrame(() => {
+        startLocationPicker();
+        listingMap?.invalidateSize();
+      });
     } catch (error) {
       showStatus(status, `Could not verify house-owner access: ${getErrorMessage(error)}`);
     }
@@ -1436,7 +1450,6 @@ if (listingContainer) loadListings(listingContainer);
 const featuredContainer = document.querySelector("[data-featured-listings]");
 if (featuredContainer) loadListings(featuredContainer, true);
 loadRoomDetails();
-startLocationPicker();
 startAdminDashboard();
 startAdminRoleSwitcher();
 startListingAccess();
