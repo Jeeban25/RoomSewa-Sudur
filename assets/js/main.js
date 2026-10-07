@@ -578,6 +578,7 @@ async function submitListing(form) {
   let imagesReady = false;
   let listingSubmitted = false;
   let listingId;
+  let saveStage = "checking your approved owner profile";
   try {
     const profile = await getDoc(doc(db, "users", auth.currentUser.uid));
     if (!profile.exists()
@@ -588,6 +589,7 @@ async function submitListing(form) {
     }
     const listingRef = doc(collection(db, "listings"));
     listingId = listingRef.id;
+    saveStage = "creating the room draft";
     await setDoc(listingRef, {
       title: String(data.get("title")).trim(),
       description: String(data.get("description")).trim(),
@@ -610,12 +612,14 @@ async function submitListing(form) {
     listingCreated = true;
     const imageUrls = [];
     for (const [index, file] of files.entries()) {
+      saveStage = `uploading photo ${index + 1} of ${files.length}`;
       const extension = file.name.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "") || "jpg";
       const imageRef = ref(storage, `listings/${auth.currentUser.uid}/${listingRef.id}/${index}.${extension}`);
       await uploadBytes(imageRef, file, { contentType: file.type });
       uploadedImageRefs.push(imageRef);
       imageUrls.push(await getDownloadURL(imageRef));
     }
+    saveStage = "saving photo links to the room draft";
     await updateDoc(listingRef, { imageUrls });
     imagesReady = true;
     const provider = getListingFeePaisa(rent) < 1001
@@ -638,7 +642,11 @@ async function submitListing(form) {
       const cleanupNote = cleanupFailures
         ? ` Cleanup also failed for ${cleanupFailures} uploaded file(s).`
         : "";
-      showStatus(status, `Could not save your room: ${getErrorMessage(error)}.${cleanupNote}`);
+      const errorMessage = getErrorMessage(error);
+      const permissionHelp = error?.code === "permission-denied"
+        ? ` Firebase denied permission while ${saveStage}. Verify the deployed Firestore and Storage rules, and confirm your owner profile is approved and active (role "owner", approvalStatus "approved", disabled false).`
+        : "";
+      showStatus(status, `Could not save your room: ${errorMessage}${errorMessage.endsWith(".") ? "" : "."}${permissionHelp}${cleanupNote}`);
     }
   } finally {
     busy(form, listingSubmitted);
