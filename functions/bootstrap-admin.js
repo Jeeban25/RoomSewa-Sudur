@@ -23,16 +23,19 @@ async function main() {
     throw new Error("Another administrator already exists. Refusing to create a second admin.");
   }
 
+  await auth.updateUser(target.uid, { displayName: "Jeeban Bohara" });
   await auth.setCustomUserClaims(target.uid, {
     ...target.customClaims,
     admin: true
   });
   await getFirestore().collection("users").doc(target.uid).set({
-    name: "Jeeban",
+    name: "Jeeban Bohara",
     email,
     role: "admin",
     area: "Mahendranagar",
-    disabled: false
+    disabled: false,
+    approvalStatus: "approved",
+    approvedAt: new Date()
   }, { merge: true });
   console.log(`Administrator role assigned to ${email}. Sign out and sign in again to refresh the ID token.`);
 }

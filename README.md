@@ -27,7 +27,7 @@ RoomSewa-Sudur is focused exclusively on student room rentals in Mahendranagar.
    node bootstrap-admin.js YOUR_ADMIN_FIREBASE_EMAIL
    ```
 
-   The bootstrap script refuses to grant admin when another admin claim already exists. The administrator must sign out and sign back in after the claim is assigned.
+   The bootstrap script refuses to grant admin when another admin claim already exists. It assigns the Firebase Authentication admin claim and marks the matching Firestore profile approved. The administrator must sign out and sign back in after the claim is assigned.
 
    The admin account keeps its trusted admin claim while using the Admin, Owner, and Tenant modes. Use the mode links on the dashboards to switch views. Owner mode uses the normal listing fee and eSewa/Khalti payment verification flow; admin privileges do not waive listing fees.
 
