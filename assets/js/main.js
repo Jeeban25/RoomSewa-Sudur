@@ -188,6 +188,7 @@ async function loginAccount(form) {
   const password = String(data.get("password") || "");
   let email = identifier.toLowerCase();
   const isAdminUsername = identifier.toLowerCase() === adminUsername.toLowerCase();
+  const adminSetupMessage = `Admin access is not enabled for ${adminEmail}. Ask the Firebase project administrator to grant this account the RoomSewa admin role, then sign out and sign in again.`;
 
   if (isAdminUsername) {
     if (!adminEmail || adminEmail.startsWith("YOUR_")) {
@@ -203,9 +204,9 @@ async function loginAccount(form) {
     await setPersistence(auth, persistence);
     const credential = await signInWithEmailAndPassword(auth, email, password);
     const token = await credential.user.getIdTokenResult(true);
-    if (isAdminUsername && token.claims.admin !== true) {
+    if ((isAdminUsername || email === adminEmail.toLowerCase()) && token.claims.admin !== true) {
       await signOut(auth);
-      showStatus(status, "This Firebase account is not authorized as the administrator.");
+      showStatus(status, adminSetupMessage);
       return;
     }
     if (token.claims.admin === true) {
@@ -218,9 +219,25 @@ async function loginAccount(form) {
       showStatus(status, "Your account is missing its profile record. Contact support before continuing.");
       return;
     }
-    if (profile.data().approvalStatus !== "approved") {
+    const profileData = profile.data();
+    if (profileData.role === "admin") {
+      await signOut(auth);
+      showStatus(status, `Your profile is marked as admin, but Firebase has not enabled administrator access. ${adminSetupMessage}`);
+      return;
+    }
+    if (profileData.disabled === true) {
+      await signOut(auth);
+      showStatus(status, "This account is disabled. Contact the administrator for help.");
+      return;
+    }
+    if (profileData.approvalStatus !== "approved") {
       await signOut(auth);
       showStatus(status, "Your account is waiting for administrator approval.");
+      return;
+    }
+    if (!["owner", "tenant"].includes(profileData.role)) {
+      await signOut(auth);
+      showStatus(status, "Your account has an unsupported role. Contact the administrator for help.");
       return;
     }
     const returnTo = new URLSearchParams(window.location.search).get("returnTo");
@@ -232,7 +249,7 @@ async function loginAccount(form) {
         return;
       }
     }
-    window.location.assign(profile.data().role === "owner" ? "landlord-dashboard.html" : "../index.html");
+    window.location.assign(profileData.role === "owner" ? "landlord-dashboard.html" : "user-profile.html");
   } catch (error) {
     showStatus(status, getSignInErrorMessage(error, isAdminUsername));
   } finally {
@@ -1054,8 +1071,12 @@ function startProfileForm() {
     try {
       const profile = await getDoc(doc(db, "users", user.uid));
       if (!profile.exists()) throw new Error("The account profile could not be found.");
-      form.querySelector('[name="name"]').value = profile.data().name || "";
-      form.querySelector('[name="phone"]').value = profile.data().phone || "";
+      const profileData = profile.data();
+      if (profileData.role === "owner" || (await user.getIdTokenResult()).claims.admin === true) {
+        document.querySelector("[data-profile-owner-only]")?.classList.remove("d-none");
+      }
+      form.querySelector('[name="name"]').value = profileData.name || "";
+      form.querySelector('[name="phone"]').value = profileData.phone || "";
       form.querySelector('[name="email"]').value = user.email || "";
     } catch (error) {
       showStatus(status, `Could not load your profile: ${getErrorMessage(error)}`);
@@ -1244,67 +1265,3 @@ document.querySelector("[data-listing-sort]")?.addEventListener("change", () => 
   applyListingFilters();
   updateFilterUrl();
 });
-
-// ImgBB Upload Helper Function
-async function uploadToImgBB(fileInput) {
-    const file = fileInput.files[0];
-    if (!file) return null;
-
-    const formData = new FormData();
-    formData.append("image", file);
-
-    const apiKey = "3e49d2680697f77a66a30651483e0f49"; // Your ImgBB API Key
-
-    try {
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-            method: "POST",
-            body: formData
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            return result.data.url; // Returns direct hosted image URL
-        } else {
-            console.error("ImgBB upload failed:", result);
-            return null;
-        }
-    } catch (error) {
-        console.error("Error uploading image:", error);
-        return null;
-    }
-}
-
-const addRoomForm = document.getElementById("addRoomForm"); // Match your form's ID
-
-if (addRoomForm) {
-    addRoomForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const fileInput = document.getElementById("roomImageInput"); // Match your file input ID
-
-        // 1. Upload the image to ImgBB
-        const imageUrl = await uploadToImgBB(fileInput);
-
-        if (!imageUrl) {
-            alert("Image upload failed. Please select an image and try again.");
-            return;
-        }
-
-        // 2. Save room details with the ImgBB URL into Firestore
-        try {
-            await db.collection("rooms").add({
-                title: document.getElementById("roomTitle").value,
-                price: document.getElementById("roomPrice").value,
-                location: document.getElementById("roomLocation").value,
-                imageUrl: imageUrl, // Storing ImgBB URL in Firestore
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            alert("Room listed successfully!");
-            addRoomForm.reset();
-        } catch (error) {
-            console.error("Firestore error:", error);
-            alert("Failed to post room. Check console for details.");
-        }
-    });
-}
